@@ -2,6 +2,8 @@ package de.melanx.maledicta;
 
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import org.moddingx.libx.mod.ModXRegistration;
@@ -11,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 
+@Mod("maledicta")
 public final class Maledicta extends ModXRegistration {
 
     private static Maledicta instance;
@@ -26,6 +29,8 @@ public final class Maledicta extends ModXRegistration {
         });
 
         instance = this;
+
+        MinecraftForge.EVENT_BUS.register(new EventListener());
     }
 
     @Override

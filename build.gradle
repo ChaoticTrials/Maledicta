@@ -1,0 +1,31 @@
+buildscript {
+    apply from: 'https://moddingx.github.io/ModUtils/v4/buildscript.gradle', to: buildscript
+}
+
+apply from: 'https://moddingx.github.io/ModUtils/v4/mod.gradle'
+apply plugin: 'org.moddingx.modgradle.cursedep'
+
+repositories {
+    maven {
+        name = "JEI"
+        url = "https://dvs1.progwml6.com/files/maven/"
+    }
+    maven {
+        name = "MelanX Maven"
+        url = "https://maven.melanx.de/"
+    }
+    maven {
+        name = "Curios"
+        url = "https://maven.theillusivec4.top/"
+    }
+}
+
+dependencies {
+    annotationProcessor "org.moddingx:LibX:1.19.2-4.2.6"
+
+    implementation fg.deobf("org.moddingx:LibX:1.19.2-4.2.6")
+    implementation fg.deobf("top.theillusivec4.curios:curios-forge:1.19.1-5.1.0.5")
+    compileOnly fg.deobf("io.github.noeppi_noeppi.mods:MineMention:1.19.1-2.1.0")
+
+    runtimeOnly fg.deobf("mezz.jei:jei-1.19.1-forge:11.2.0.241")
+}

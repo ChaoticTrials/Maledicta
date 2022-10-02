@@ -1,6 +1,8 @@
 package de.melanx.maledicta;
 
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -44,5 +46,13 @@ public class Util {
             }
         });
         EnchantmentHelper.setEnchantments(futureEnchantments, stack);
+        if (futureEnchantments.size() != allEnchantments.size()) {
+            Maledicta.getInstance().logger.warn("It seems like enchantments were deleted on {}, previous enchantments: {}", stack, allEnchantments);
+        }
+    }
+
+    public static boolean enchantmentInHand(LivingEntity entity, Enchantment enchantment) {
+        return entity.getItemInHand(InteractionHand.MAIN_HAND).getEnchantmentLevel(enchantment) >= 1
+                || entity.getItemInHand(InteractionHand.OFF_HAND).getEnchantmentLevel(enchantment) >= 1;
     }
 }

@@ -10,4 +10,8 @@ public class ModConfig {
     @Config
     @DoubleRange(min = 0, max = 1)
     public static double karmaChance = 0.2;
+
+    @Config
+    @DoubleRange(min = 0, max = 1)
+    public static double kindnessChance = 0.5;
 }

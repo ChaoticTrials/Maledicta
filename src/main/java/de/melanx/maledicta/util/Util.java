@@ -1,5 +1,6 @@
-package de.melanx.maledicta;
+package de.melanx.maledicta.util;
 
+import de.melanx.maledicta.Maledicta;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -11,6 +12,22 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.*;
 
 public class Util {
+
+    public static boolean tryToApplyCurse(ItemStack stack) {
+        List<Enchantment> possibleEnchantments = new ArrayList<>(ForgeRegistries.ENCHANTMENTS.getValues()).stream().filter(enchantment -> enchantment.isCurse() && enchantment.canEnchant(stack)).toList();
+        if (possibleEnchantments.isEmpty()) {
+            return false;
+        }
+
+        RandomSource random = RandomSource.create();
+        Enchantment enchantment = possibleEnchantments.get(random.nextInt(possibleEnchantments.size()));
+        if (enchantment.canEnchant(stack) && stack.getEnchantmentLevel(enchantment) <= 0) {
+            stack.enchant(enchantment, enchantment.getMaxLevel());
+            return true;
+        }
+
+        return false;
+    }
 
     public static void mixEnchantments(ItemStack stack) {
         RandomSource random = RandomSource.create();

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": {
+      "tag": "forge:ingots/netherite"
+    },
+    "O": {
+      "tag": "forge:ingots/netherite"
+    }
+  },
+  "pattern": [
+    "B",
+    "O",
+    "O"
+  ],
+  "result": {
+    "item": "maledicta:maledictus_aufero"
+  }
+}

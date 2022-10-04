@@ -5,9 +5,11 @@ import de.melanx.maledicta.capabilities.EnergyCollector;
 import de.melanx.maledicta.capabilities.EnergyCollectorImpl;
 import de.melanx.maledicta.lightning.ColoredLightningBoltRenderer;
 import de.melanx.maledicta.lightning.LightningHelper;
+import de.melanx.maledicta.registration.ModBlocks;
 import de.melanx.maledicta.registration.ModDamageSources;
 import de.melanx.maledicta.registration.ModEnchantments;
 import de.melanx.maledicta.util.Util;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -27,6 +29,7 @@ import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -37,8 +40,7 @@ public class EventListener {
 
     @SubscribeEvent
     public void attachItemCapability(AttachCapabilitiesEvent<ItemStack> event) {
-        // ItemStack#isEnchantable ignoring existing enchantments
-        if (event.getObject().getMaxStackSize() == 1 && event.getObject().isDamageableItem()) {
+        if (Util.isEnchantable(event.getObject())) {
             event.addCapability(Maledicta.getInstance().resource("energy_collector"), new EnergyCollectorImpl());
         }
     }
@@ -67,10 +69,11 @@ public class EventListener {
                     if (cap.negativeEnergy().test()) {
                         if (Util.tryToApplyCurse(stack)) {
                             // summon custom lightning
-                            LightningBolt entity = new LightningBolt(EntityType.LIGHTNING_BOLT, player.level);
+                            LightningBolt entity = EntityType.LIGHTNING_BOLT.create(player.level);
                             LightningHelper.setColor(entity, "FF0000");
-                            entity.setPos(player.position());
-                            entity.setDamage(0);
+                            //noinspection ConstantConditions
+                            entity.moveTo(player.position());
+                            entity.setVisualOnly(true);
                             player.level.addFreshEntity(entity);
                         }
                     }
@@ -129,13 +132,25 @@ public class EventListener {
         }
     }
 
-    // DEBUG
+    // DEBUG todo remove
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public void onTooltip(RenderTooltipEvent.GatherComponents event) {
         event.getItemStack().getCapability(EnergyCollectorImpl.INSTANCE).ifPresent(cap -> {
             event.getTooltipElements().add(Either.left(Component.literal(String.format("%.5g%n", cap.negativeEnergy().get() * 100d) + "%")));
         });
+    }
+
+    @SubscribeEvent
+    public void onEntityJoinLevel(EntityJoinLevelEvent event) {
+        if (event.getEntity() instanceof LightningBolt lightning) {
+            BlockPos strikePosition = lightning.getStrikePosition();
+            if (lightning.level.getBlockState(strikePosition).is(ModBlocks.maledictusAufero)) {
+                lightning.setDamage(0);
+                LightningHelper.setCursed(lightning);
+                LightningHelper.setColor(lightning, Util.LIGHTNING_COLOR);
+            }
+        }
     }
 
     @Mod.EventBusSubscriber(modid = "maledicta", bus = Mod.EventBusSubscriber.Bus.MOD)

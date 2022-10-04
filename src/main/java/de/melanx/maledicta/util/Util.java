@@ -1,6 +1,10 @@
 package de.melanx.maledicta.util;
 
 import de.melanx.maledicta.Maledicta;
+import net.minecraft.core.Registry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -12,6 +16,29 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.*;
 
 public class Util {
+
+    public static final String LIGHTNING_COLOR = "6905F5";
+
+    public static void unenchant(ItemStack stack, Enchantment enchantment) {
+        if (!stack.getOrCreateTag().contains("Enchantments", Tag.TAG_LIST)) {
+            return;
+        }
+
+        ListTag list = stack.getOrCreateTag().getList("Enchantments", Tag.TAG_COMPOUND);
+        for (Tag tag : list) {
+            String id = ((CompoundTag) tag).getString("id");
+            //noinspection ConstantConditions,deprecation
+            if (id.equals(Registry.ENCHANTMENT.getKey(enchantment).toString())) {
+                list.remove(tag);
+                break;
+            }
+        }
+    }
+
+    // ItemStack#isEnchantable ignoring existing enchantments
+    public static boolean isEnchantable(ItemStack stack) {
+        return stack.getMaxStackSize() == 1 && stack.isDamageableItem();
+    }
 
     public static boolean tryToApplyCurse(ItemStack stack) {
         List<Enchantment> possibleEnchantments = new ArrayList<>(ForgeRegistries.ENCHANTMENTS.getValues()).stream().filter(enchantment -> enchantment.isCurse() && enchantment.canEnchant(stack)).toList();

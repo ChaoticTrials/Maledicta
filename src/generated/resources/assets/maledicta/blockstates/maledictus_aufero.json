@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "maledicta:block/maledictus_aufero",
+      "x": 180
+    },
+    "facing=east": {
+      "model": "maledicta:block/maledictus_aufero",
+      "x": 90,
+      "y": 90
+    },
+    "facing=north": {
+      "model": "maledicta:block/maledictus_aufero",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "maledicta:block/maledictus_aufero",
+      "x": 90,
+      "y": 180
+    },
+    "facing=up": {
+      "model": "maledicta:block/maledictus_aufero"
+    },
+    "facing=west": {
+      "model": "maledicta:block/maledictus_aufero",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

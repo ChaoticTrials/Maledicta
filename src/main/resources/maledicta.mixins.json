@@ -8,6 +8,7 @@
   "server": [],
   "mixins": [
     "ItemStackMixin",
-    "LightningBoltMixin"
+    "LightningBoltMixin",
+    "ServerLevelMixin"
   ]
 }

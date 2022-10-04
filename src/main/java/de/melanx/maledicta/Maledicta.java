@@ -1,5 +1,7 @@
 package de.melanx.maledicta;
 
+import de.melanx.maledicta.network.ModNetwork;
+import de.melanx.maledicta.registration.ModBlocks;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
@@ -17,6 +19,7 @@ import javax.annotation.Nonnull;
 public final class Maledicta extends ModXRegistration {
 
     private static Maledicta instance;
+    private static ModNetwork network;
     public final Logger logger = LoggerFactory.getLogger(Maledicta.class);
 
     public Maledicta() {
@@ -24,11 +27,12 @@ public final class Maledicta extends ModXRegistration {
             @Nonnull
             @Override
             public ItemStack makeIcon() {
-                return ItemStack.EMPTY;
+                return new ItemStack(ModBlocks.maledictusAufero);
             }
         });
 
         instance = this;
+        network = new ModNetwork(this);
 
         MinecraftForge.EVENT_BUS.register(new EventListener());
     }
@@ -46,6 +50,11 @@ public final class Maledicta extends ModXRegistration {
     @Nonnull
     public static Maledicta getInstance() {
         return instance;
+    }
+
+    @Nonnull
+    public static ModNetwork getNetwork() {
+        return network;
     }
 
     @Override

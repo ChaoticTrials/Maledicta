@@ -1,6 +1,8 @@
 {
   "itemGroup.maledicta": "Maledicta",
 
+  "block.maledicta.maledictus_aufero": "Maledictus Aufero",
+
   "death.attack.maledicta_karma": "%1$s felt karma for hurting others",
 
   "enchantment.maledicta.curse_of_karma": "Curse of Karma",

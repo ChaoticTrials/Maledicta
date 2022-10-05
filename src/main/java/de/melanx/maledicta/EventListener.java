@@ -20,6 +20,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobType;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
@@ -114,7 +115,7 @@ public class EventListener {
 
             if (victim.getMobType() == MobType.UNDEAD) {
                 causer.getMainHandItem().getCapability(EnergyCollectorImpl.INSTANCE).ifPresent(cap -> {
-                    cap.addEnergy(0.001 * event.getAmount());
+                    cap.addEnergy(0.001 * event.getAmount() / 2);
                 });
             }
 
@@ -143,6 +144,9 @@ public class EventListener {
 
     @SubscribeEvent
     public void onEntityJoinLevel(EntityJoinLevelEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            System.out.println(player.position());
+        }
         if (event.getEntity() instanceof LightningBolt lightning) {
             BlockPos strikePosition = lightning.getStrikePosition();
             if (lightning.level.getBlockState(strikePosition).is(ModBlocks.maledictusAufero)) {

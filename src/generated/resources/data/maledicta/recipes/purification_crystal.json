@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": {
+      "tag": "forge:gems/amethyst"
+    },
+    "C": {
+      "item": "minecraft:black_candle"
+    },
+    "L": {
+      "tag": "minecraft:logs_that_burn"
+    }
+  },
+  "pattern": [
+    "A A",
+    "AAA",
+    "CLC"
+  ],
+  "result": {
+    "item": "maledicta:purification_crystal"
+  }
+}

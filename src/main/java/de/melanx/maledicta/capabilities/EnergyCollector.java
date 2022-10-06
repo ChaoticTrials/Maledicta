@@ -20,17 +20,7 @@ public interface EnergyCollector {
     void removeEnergy(double subtraction);
 
     /**
-     * Amount of purification processes
+     * Sets negative energy to exact value
      */
-    int purificationProcesses();
-
-    /**
-     * Increases the process count by 1
-     */
-    void increaseProcesses();
-
-    /**
-     * Resets process count to 0
-     */
-    void resetProcesses();
+    void setEnergy(double energy);
 }

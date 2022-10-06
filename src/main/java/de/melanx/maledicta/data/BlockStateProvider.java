@@ -17,6 +17,5 @@ public class BlockStateProvider extends BlockStateProviderBase {
     @Override
     protected void setup() {
         this.manualModel(ModBlocks.maledictusAufero);
-        this.manualModel(ModBlocks.purificationCrystal);
     }
 }

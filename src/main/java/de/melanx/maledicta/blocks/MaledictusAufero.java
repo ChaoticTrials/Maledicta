@@ -1,5 +1,7 @@
 package de.melanx.maledicta.blocks;
 
+import de.melanx.maledicta.ModConfig;
+import de.melanx.maledicta.capabilities.EnergyCollectorImpl;
 import de.melanx.maledicta.lightning.LightningHelper;
 import de.melanx.maledicta.network.ModNetwork;
 import de.melanx.maledicta.util.Util;
@@ -53,6 +55,22 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
                 .filter(item -> item.getItem().getAllEnchantments().entrySet().stream().anyMatch(entry -> entry.getKey().isCurse()))
                 .toList();
 
+        if (ModConfig.NegativeEnergy.enabled) {
+            for (ItemEntity item : items) {
+                item.getItem().getCapability(EnergyCollectorImpl.INSTANCE).ifPresent(cap -> {
+                    cap.setEnergy(cap.negativeEnergy().get() / 2);
+                    ModNetwork.updateItemEnchantments(item);
+
+                    LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(level);
+                    //noinspection ConstantConditions
+                    lightning.setVisualOnly(true);
+                    lightning.moveTo(item.position());
+                    LightningHelper.setColor(lightning, "00FF00");
+                    level.addFreshEntity(lightning);
+                });
+            }
+        }
+
         Set<Triple<UUID, Enchantment, Integer>> collectedCurses = new HashSet<>();
         cursedItems.forEach(item -> {
             Map<Enchantment, Integer> allEnchantments = item.getItem().getAllEnchantments();
@@ -61,6 +79,7 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
             collectedCurses.add(Triple.of(item.getUUID(), randomCurse.getKey(), randomCurse.getValue()));
             Util.unenchant(item.getItem(), randomCurse.getKey());
             ModNetwork.updateItemEnchantments(item);
+
             LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(level);
             //noinspection ConstantConditions
             lightning.setVisualOnly(true);

@@ -6,6 +6,9 @@
   "death.attack.maledicta_karma": "%1$s felt karma for hurting others",
 
   "enchantment.maledicta.curse_of_karma": "Curse of Karma",
+  "enchantment.maledicta.curse_of_karma.desc": "The damager will take the same damage amount like the receiver, too.",
   "enchantment.maledicta.curse_of_kindness": "Curse of Kindness",
-  "enchantment.maledicta.curse_of_randomness": "Curse of Randomness"
+  "enchantment.maledicta.curse_of_kindness.desc": "The damager will not hurt but heal.",
+  "enchantment.maledicta.curse_of_randomness": "Curse of Randomness",
+  "enchantment.maledicta.curse_of_randomness.desc": "Each time the item loses durability, the enchantments will be shuffled. Expect curses."
 }

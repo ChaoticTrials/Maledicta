@@ -42,18 +42,8 @@ public class EnergyCollectorImpl implements EnergyCollector, ICapabilityProvider
     }
 
     @Override
-    public int purificationProcesses() {
-        return this.purificationProcesses;
-    }
-
-    @Override
-    public void increaseProcesses() {
-        this.purificationProcesses++;
-    }
-
-    @Override
-    public void resetProcesses() {
-        this.purificationProcesses = 0;
+    public void setEnergy(double energy) {
+        this.negativeEnergy = new Chance(energy / 100d);
     }
 
     @Override

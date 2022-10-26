@@ -1,6 +1,7 @@
 package de.melanx.maledicta.util;
 
 import de.melanx.maledicta.Maledicta;
+import de.melanx.maledicta.api.ApplyItemCurseEvent;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -8,9 +9,11 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.*;
@@ -40,7 +43,7 @@ public class Util {
         return stack.getMaxStackSize() == 1 && stack.isDamageableItem();
     }
 
-    public static boolean tryToApplyCurse(ItemStack stack) {
+    public static boolean tryToApplyCurse(Player player, ItemStack stack) {
         List<Enchantment> possibleEnchantments = new ArrayList<>(ForgeRegistries.ENCHANTMENTS.getValues()).stream().filter(enchantment -> enchantment.isCurse() && enchantment.canEnchant(stack)).toList();
         if (possibleEnchantments.isEmpty()) {
             return false;
@@ -48,7 +51,13 @@ public class Util {
 
         RandomSource random = RandomSource.create();
         Enchantment enchantment = possibleEnchantments.get(random.nextInt(possibleEnchantments.size()));
-        if (enchantment.canEnchant(stack) && stack.getEnchantmentLevel(enchantment) <= 0) {
+
+        ApplyItemCurseEvent event = new ApplyItemCurseEvent(player, stack, enchantment);
+        if (MinecraftForge.EVENT_BUS.post(event)) return false;
+        enchantment = event.getEnchantment();
+        if (enchantment == null) return false;
+        
+        if ((event.isForced() || enchantment.canEnchant(stack)) && stack.getEnchantmentLevel(enchantment) <= 0) {
             stack.enchant(enchantment, enchantment.getMaxLevel());
             return true;
         }

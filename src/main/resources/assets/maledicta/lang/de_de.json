@@ -1,0 +1,14 @@
+{
+  "itemGroup.maledicta": "Maledicta",
+
+  "block.maledicta.maledictus_aufero": "Maledictus Aufero",
+
+  "death.attack.maledicta_karma": "%1$s spürte das Karma dafür, andere zu verletzen",
+
+  "enchantment.maledicta.curse_of_karma": "Fluch des Karmas",
+  "enchantment.maledicta.curse_of_karma.desc": "Der Angreifer wird den gleichen Schaden wie das Opfer erhalten.",
+  "enchantment.maledicta.curse_of_kindness": "Fluch der Freundlichkeit",
+  "enchantment.maledicta.curse_of_kindness.desc": "Der Angreifer schadet nicht, sondern heilt.",
+  "enchantment.maledicta.curse_of_randomness": "Fluch der Zufälligkeit",
+  "enchantment.maledicta.curse_of_randomness.desc": "Jedes Mal, wenn ein Item Haltbarkeit verliert, werden alle Verzauberungen durchmischt. Außer Flüche."
+}

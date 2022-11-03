@@ -29,11 +29,11 @@ public class ApplyItemCurseEvent extends Event {
     }
 
     public Player getPlayer() {
-        return player;
+        return this.player;
     }
 
     public ItemStack getStack() {
-        return stack;
+        return this.stack;
     }
 
     /**
@@ -41,14 +41,14 @@ public class ApplyItemCurseEvent extends Event {
      */
     @Nullable
     public Enchantment getEnchantment() {
-        return enchantment;
+        return this.enchantment;
     }
 
     /**
      * Gets whether the enchantment is forced (will be applied even if it does not match the ItemStack)
      */
     public boolean isForced() {
-        return force;
+        return this.force;
     }
 
     /**

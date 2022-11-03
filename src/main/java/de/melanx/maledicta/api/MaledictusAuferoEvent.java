@@ -30,15 +30,15 @@ public class MaledictusAuferoEvent extends Event {
     }
     
     public Level getLevel() {
-        return level;
+        return this.level;
     }
 
     public BlockState getState() {
-        return state;
+        return this.state;
     }
 
     public BlockPos getPos() {
-        return pos;
+        return this.pos;
     }
 
     /**
@@ -46,14 +46,14 @@ public class MaledictusAuferoEvent extends Event {
      * and may be enchanted with curses from other items if applicable.
      */
     public List<ItemEntity> getAllItems() {
-        return allItems;
+        return this.allItems;
     }
 
     /**
      * Gets all the cursed items. These will get a curse removed (that may be put onto a different item if applicable).
      */
     public List<ItemEntity> getCursedItems() {
-        return cursedItems;
+        return this.cursedItems;
     }
 
     @Override

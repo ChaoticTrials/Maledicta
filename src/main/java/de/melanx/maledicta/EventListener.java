@@ -69,8 +69,8 @@ public class EventListener {
                         if (Util.tryToApplyCurse(stack)) {
                             // summon custom lightning
                             LightningBolt entity = EntityType.LIGHTNING_BOLT.create(player.level);
-                            LightningHelper.setColor(entity, "FF0000");
                             //noinspection ConstantConditions
+                            LightningHelper.setColor(entity, 0xFF0000);
                             entity.moveTo(player.position());
                             entity.setVisualOnly(true);
                             player.level.addFreshEntity(entity);

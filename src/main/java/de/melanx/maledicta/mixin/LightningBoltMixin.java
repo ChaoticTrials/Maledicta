@@ -19,7 +19,7 @@ public class LightningBoltMixin {
     @Inject(method = "defineSynchedData", at = @At(value = "HEAD"))
     private void defineSyncedData(CallbackInfo ci) {
         LightningBolt lightning = (LightningBolt) (Object) this;
-        lightning.getEntityData().define(LightningHelper.COLOR_ACCESSOR, "");
+        lightning.getEntityData().define(LightningHelper.COLOR_ACCESSOR, -1);
         lightning.getEntityData().define(LightningHelper.CURSED_ACCESSOR, false);
     }
 

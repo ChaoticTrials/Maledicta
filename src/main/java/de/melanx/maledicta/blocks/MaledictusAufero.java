@@ -65,7 +65,7 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
                     //noinspection ConstantConditions
                     lightning.setVisualOnly(true);
                     lightning.moveTo(item.position());
-                    LightningHelper.setColor(lightning, "00FF00");
+                    LightningHelper.setColor(lightning, 0x00FF00);
                     level.addFreshEntity(lightning);
                 });
             }

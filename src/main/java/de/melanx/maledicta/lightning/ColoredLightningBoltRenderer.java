@@ -89,16 +89,12 @@ public class ColoredLightningBoltRenderer extends LightningBoltRenderer {
     }
 
     private Color getColor(LightningBolt lightning) {
-        String hex = LightningHelper.getColor(lightning);
+        int hex = LightningHelper.getColor(lightning);
 
-        if (!hex.isEmpty()) {
-            try {
-                return Color.decode(hex);
-            } catch (NumberFormatException e) {
-                return DEFAULT_COLOR;
-            }
+        if (hex < 0) {
+            return DEFAULT_COLOR;
         }
 
-        return DEFAULT_COLOR;
+        return new Color(hex);
     }
 }

@@ -17,7 +17,7 @@ import java.util.*;
 
 public class Util {
 
-    public static final String LIGHTNING_COLOR = "6905F5";
+    public static final int LIGHTNING_COLOR = 0x6905F5;
 
     public static void unenchant(ItemStack stack, Enchantment enchantment) {
         if (!stack.getOrCreateTag().contains("Enchantments", Tag.TAG_LIST)) {

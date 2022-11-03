@@ -66,7 +66,7 @@ public class EventListener {
             for (ItemStack stack : player.getHandSlots()) {
                 stack.getCapability(EnergyCollectorImpl.INSTANCE).ifPresent(cap -> {
                     if (cap.negativeEnergy().test()) {
-                        if (Util.tryToApplyCurse(stack)) {
+                        if (Util.tryToApplyCurse(player, stack)) {
                             // summon custom lightning
                             LightningBolt entity = EntityType.LIGHTNING_BOLT.create(player.level);
                             //noinspection ConstantConditions

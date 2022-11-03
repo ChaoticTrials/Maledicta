@@ -1,6 +1,7 @@
 package de.melanx.maledicta.blocks;
 
 import de.melanx.maledicta.ModConfig;
+import de.melanx.maledicta.api.MaledictusAuferoEvent;
 import de.melanx.maledicta.capabilities.EnergyCollectorImpl;
 import de.melanx.maledicta.lightning.LightningHelper;
 import de.melanx.maledicta.network.ModNetwork;
@@ -20,6 +21,7 @@ import net.minecraft.world.level.block.LightningRodBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.MinecraftForge;
 import org.apache.commons.lang3.tuple.Triple;
 import org.moddingx.libx.mod.ModX;
 import org.moddingx.libx.registration.Registerable;
@@ -54,6 +56,8 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
         List<ItemEntity> cursedItems = items.stream()
                 .filter(item -> item.getItem().getAllEnchantments().entrySet().stream().anyMatch(entry -> entry.getKey().isCurse()))
                 .toList();
+        
+        if (MinecraftForge.EVENT_BUS.post(new MaledictusAuferoEvent(level, state, pos, items, cursedItems))) return;
 
         if (ModConfig.NegativeEnergy.enabled) {
             for (ItemEntity item : items) {

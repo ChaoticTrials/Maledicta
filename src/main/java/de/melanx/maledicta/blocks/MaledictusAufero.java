@@ -61,28 +61,13 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
 
         if (MinecraftForge.EVENT_BUS.post(new MaledictusAuferoEvent(level, state, pos, items, cursedItems))) return;
 
-        if (ModConfig.NegativeEnergy.enabled) {
-            for (ItemEntity item : items) {
-                item.getItem().getCapability(EnergyCollectorImpl.INSTANCE).ifPresent(cap -> {
-                    cap.setEnergy(cap.negativeEnergy().get() / 2);
-                    ModNetwork.updateItemEnchantments(item);
-
-                    LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(level);
-                    //noinspection ConstantConditions
-                    lightning.setVisualOnly(true);
-                    lightning.moveTo(item.position());
-                    LightningHelper.setColor(lightning, 0x00FF00);
-                    level.addFreshEntity(lightning);
-                });
-            }
-        }
-
         if (ModConfig.onlyTransferCurses) {
             if (cursedItems.size() == 0) {
                 return;
             }
 
             Set<UUID> alreadyUsed = new HashSet<>();
+            Set<UUID> hasLightning = new HashSet<>();
 
             while (true) {
                 ItemEntity first = null;
@@ -101,9 +86,11 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
                 }
 
                 if (first == null || second == null) {
-                    return;
+                    break;
                 }
 
+                hasLightning.add(first.getUUID());
+                hasLightning.add(second.getUUID());
                 LeveledEnchantment firstCurse = this.getRandomCurse(first.getItem(), level.random);
                 LeveledEnchantment secondCurse = this.getRandomCurse(second.getItem(), level.random);
 
@@ -128,12 +115,19 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
                         second.getItem().enchant(firstCurse.enchantment, firstCurse.level);
                     }
 
+                    this.summonLightning(level, first.position());
+                    this.summonLightning(level, second.position());
+
                     ModNetwork.updateItemEnchantments(first);
                     ModNetwork.updateItemEnchantments(second);
                 }
             }
+
+            this.handleNegativeEnergy(level, hasLightning, items);
+            return;
         }
 
+        Set<UUID> hasLightning = new HashSet<>();
         Set<Pair<UUID, LeveledEnchantment>> collectedCurses = new HashSet<>();
         cursedItems.forEach(item -> {
             LeveledEnchantment randomCurse = this.getRandomCurse(item.getItem(), level.random);
@@ -142,6 +136,7 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
                 Util.unenchant(item.getItem(), randomCurse.enchantment);
                 ModNetwork.updateItemEnchantments(item);
 
+                hasLightning.add(item.getUUID());
                 this.summonLightning(level, item.position());
             }
         });
@@ -154,6 +149,8 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
             }
             items.remove(randomItem);
         });
+
+        this.handleNegativeEnergy(level, hasLightning, items);
     }
 
     private LeveledEnchantment getRandomCurse(ItemStack stack, RandomSource random) {
@@ -167,6 +164,26 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
         Map.Entry<Enchantment, Integer> randomCurse = curses.get(random.nextInt(curses.size()));
 
         return new LeveledEnchantment(randomCurse.getKey(), randomCurse.getValue());
+    }
+
+    private void handleNegativeEnergy(Level level, Set<UUID> noLightning, List<ItemEntity> items) {
+        if (ModConfig.NegativeEnergy.enabled) {
+            for (ItemEntity item : items) {
+                item.getItem().getCapability(EnergyCollectorImpl.INSTANCE).ifPresent(cap -> {
+                    cap.setEnergy(cap.negativeEnergy().get() / 2);
+                    ModNetwork.updateItemEnchantments(item);
+
+                    if (!noLightning.contains(item.getUUID())) {
+                        LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(level);
+                        //noinspection ConstantConditions
+                        lightning.setVisualOnly(true);
+                        lightning.moveTo(item.position());
+                        LightningHelper.setColor(lightning, 0x00FF00);
+                        level.addFreshEntity(lightning);
+                    }
+                });
+            }
+        }
     }
 
     private void summonLightning(Level level, Vec3 pos) {

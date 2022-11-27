@@ -25,6 +25,9 @@ public class ModConfig {
     @IntRange(min = 0)
     public static int maxCurseDelay = 12000;
 
+    @Config("Settings can only be transferred, not 'getting lost'")
+    public static boolean onlyTransferCurses = false;
+
     @Group
     public static class NegativeEnergy {
 

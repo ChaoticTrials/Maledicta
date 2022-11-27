@@ -8,11 +8,13 @@ import de.melanx.maledicta.network.ModNetwork;
 import de.melanx.maledicta.util.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -22,7 +24,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
-import org.apache.commons.lang3.tuple.Triple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.moddingx.libx.mod.ModX;
 import org.moddingx.libx.registration.Registerable;
 import org.moddingx.libx.registration.RegistrationContext;
@@ -56,7 +58,7 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
         List<ItemEntity> cursedItems = items.stream()
                 .filter(item -> item.getItem().getAllEnchantments().entrySet().stream().anyMatch(entry -> entry.getKey().isCurse()))
                 .toList();
-        
+
         if (MinecraftForge.EVENT_BUS.post(new MaledictusAuferoEvent(level, state, pos, items, cursedItems))) return;
 
         if (ModConfig.NegativeEnergy.enabled) {
@@ -75,31 +77,105 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
             }
         }
 
-        Set<Triple<UUID, Enchantment, Integer>> collectedCurses = new HashSet<>();
-        cursedItems.forEach(item -> {
-            Map<Enchantment, Integer> allEnchantments = item.getItem().getAllEnchantments();
-            List<Map.Entry<Enchantment, Integer>> curses = allEnchantments.entrySet().stream().filter(entry -> entry.getKey().isCurse()).toList();
-            Map.Entry<Enchantment, Integer> randomCurse = curses.get(level.random.nextInt(curses.size()));
-            collectedCurses.add(Triple.of(item.getUUID(), randomCurse.getKey(), randomCurse.getValue()));
-            Util.unenchant(item.getItem(), randomCurse.getKey());
-            ModNetwork.updateItemEnchantments(item);
+        if (ModConfig.onlyTransferCurses) {
+            if (cursedItems.size() == 0) {
+                return;
+            }
 
-            LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(level);
-            //noinspection ConstantConditions
-            lightning.setVisualOnly(true);
-            lightning.moveTo(item.position());
-            LightningHelper.setColor(lightning, Util.LIGHTNING_COLOR);
-            level.addFreshEntity(lightning);
+            Set<UUID> alreadyUsed = new HashSet<>();
+
+            while (true) {
+                ItemEntity first = null;
+                ItemEntity second = null;
+
+                Optional<ItemEntity> opt1 = items.stream().filter(item -> !alreadyUsed.contains(item.getUUID())).findAny();
+                if (opt1.isPresent()) {
+                    first = opt1.get();
+                    alreadyUsed.add(opt1.get().getUUID());
+                }
+
+                Optional<ItemEntity> opt2 = items.stream().filter(item -> !alreadyUsed.contains(item.getUUID())).findAny();
+                if (opt2.isPresent()) {
+                    second = opt2.get();
+                    alreadyUsed.add(opt2.get().getUUID());
+                }
+
+                if (first == null || second == null) {
+                    return;
+                }
+
+                LeveledEnchantment firstCurse = this.getRandomCurse(first.getItem(), level.random);
+                LeveledEnchantment secondCurse = this.getRandomCurse(second.getItem(), level.random);
+
+                boolean enchantFirst = false;
+                boolean enchantSecond = false;
+                if (secondCurse != null) {
+                    enchantFirst = first.getItem().getEnchantmentLevel(secondCurse.enchantment) == 0 && secondCurse.enchantment.canEnchant(first.getItem());
+                }
+
+                if (firstCurse != null) {
+                    enchantSecond = second.getItem().getEnchantmentLevel(firstCurse.enchantment) == 0 && firstCurse.enchantment.canEnchant(second.getItem());
+                }
+
+                if (enchantFirst || enchantSecond) {
+                    if (enchantFirst) {
+                        Util.unenchant(second.getItem(), secondCurse.enchantment);
+                        first.getItem().enchant(secondCurse.enchantment, secondCurse.level);
+                    }
+
+                    if (enchantSecond) {
+                        Util.unenchant(first.getItem(), firstCurse.enchantment);
+                        second.getItem().enchant(firstCurse.enchantment, firstCurse.level);
+                    }
+
+                    ModNetwork.updateItemEnchantments(first);
+                    ModNetwork.updateItemEnchantments(second);
+                }
+            }
+        }
+
+        Set<Pair<UUID, LeveledEnchantment>> collectedCurses = new HashSet<>();
+        cursedItems.forEach(item -> {
+            LeveledEnchantment randomCurse = this.getRandomCurse(item.getItem(), level.random);
+            if (randomCurse != null) {
+                collectedCurses.add(Pair.of(item.getUUID(), randomCurse));
+                Util.unenchant(item.getItem(), randomCurse.enchantment);
+                ModNetwork.updateItemEnchantments(item);
+
+                this.summonLightning(level, item.position());
+            }
         });
 
         collectedCurses.forEach(curse -> {
             ItemEntity randomItem = items.get(level.random.nextInt(items.size()));
-            if (randomItem.getUUID() != curse.getLeft() && curse.getMiddle().canEnchant(randomItem.getItem()) && randomItem.getItem().getEnchantmentLevel(curse.getMiddle()) < 1) {
-                randomItem.getItem().enchant(curse.getMiddle(), curse.getRight());
+            if (randomItem.getUUID() != curse.getLeft() && curse.getValue().enchantment.canEnchant(randomItem.getItem()) && randomItem.getItem().getEnchantmentLevel(curse.getValue().enchantment) < 1) {
+                randomItem.getItem().enchant(curse.getValue().enchantment, curse.getValue().level);
                 ModNetwork.updateItemEnchantments(randomItem);
             }
             items.remove(randomItem);
         });
+    }
+
+    private LeveledEnchantment getRandomCurse(ItemStack stack, RandomSource random) {
+        Map<Enchantment, Integer> allEnchantments = stack.getAllEnchantments();
+        List<Map.Entry<Enchantment, Integer>> curses = allEnchantments.entrySet().stream().filter(entry -> entry.getKey().isCurse()).toList();
+
+        if (curses.isEmpty()) {
+            return null;
+        }
+
+        Map.Entry<Enchantment, Integer> randomCurse = curses.get(random.nextInt(curses.size()));
+
+        return new LeveledEnchantment(randomCurse.getKey(), randomCurse.getValue());
+    }
+
+    private void summonLightning(Level level, Vec3 pos) {
+        LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(level);
+        //noinspection ConstantConditions
+        lightning.setVisualOnly(true);
+        lightning.moveTo(pos);
+        LightningHelper.setColor(lightning, Util.LIGHTNING_COLOR);
+        level.addFreshEntity(lightning);
     }
 
     public static AABB expandBox(Vec3 center, double radius) {
@@ -110,5 +186,9 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
     @Override
     public void registerAdditional(RegistrationContext ctx, EntryCollector builder) {
         builder.register(Registry.ITEM_REGISTRY, this.item);
+    }
+
+    record LeveledEnchantment(Enchantment enchantment, int level) {
+        // NO-OP
     }
 }

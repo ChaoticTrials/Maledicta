@@ -1,5 +1,6 @@
 package de.melanx.maledicta.mixin;
 
+import de.melanx.maledicta.ModConfig;
 import de.melanx.maledicta.blocks.MaledictusAufero;
 import de.melanx.maledicta.lightning.LightningHelper;
 import de.melanx.maledicta.registration.ModBlocks;
@@ -27,6 +28,7 @@ public class LightningBoltMixin {
     private boolean powerCursedRod(BlockState state, Block block) {
         if (state.is(ModBlocks.maledictusAufero)) {
             LightningBolt lightning = (LightningBolt) (Object) this;
+            lightning.setVisualOnly(ModConfig.safeLightnings);
             ((MaledictusAufero) state.getBlock()).onLightningStrike(state, lightning.level, lightning.getStrikePosition());
             return false;
         }

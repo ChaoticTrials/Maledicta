@@ -9,6 +9,10 @@ import org.moddingx.libx.config.validate.IntRange;
 @RegisterConfig
 public class ModConfig {
 
+    @Config({"If set to true, the lightnings for the Maledictus Aufero will only be visible",
+            "This will protect your item from getting burnt"})
+    public static boolean safeLightnings = false;
+
     @Config("The chance that the karma enchantment will take effect")
     @DoubleRange(min = 0, max = 1)
     public static double karmaChance = 0.2;

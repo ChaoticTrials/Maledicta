@@ -11,7 +11,7 @@ public class ModConfig {
 
     @Config({"If set to true, the lightnings for the Maledictus Aufero will only be visible",
             "This will protect your item from getting burnt"})
-    public static boolean safeLightnings = false;
+    public static boolean safeLightnings = true;
 
     @Config("The chance that the karma enchantment will take effect")
     @DoubleRange(min = 0, max = 1)

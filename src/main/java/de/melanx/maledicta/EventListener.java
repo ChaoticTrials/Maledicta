@@ -141,6 +141,7 @@ public class EventListener {
             BlockPos strikePosition = lightning.getStrikePosition();
             if (lightning.level.getBlockState(strikePosition).is(ModBlocks.maledictusAufero)) {
                 lightning.setDamage(0);
+                lightning.setVisualOnly(ModConfig.safeLightnings);
                 LightningHelper.setCursed(lightning);
                 LightningHelper.setColor(lightning, Util.LIGHTNING_COLOR);
             }

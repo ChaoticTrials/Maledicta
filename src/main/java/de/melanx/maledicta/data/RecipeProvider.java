@@ -1,7 +1,7 @@
 package de.melanx.maledicta.data;
 
 import de.melanx.maledicta.registration.ModBlocks;
-import net.minecraft.data.DataGenerator;
+import net.minecraft.data.PackOutput;
 import net.minecraftforge.common.Tags;
 import org.moddingx.libx.annotation.data.Datagen;
 import org.moddingx.libx.datagen.provider.recipe.RecipeProviderBase;
@@ -11,8 +11,8 @@ import org.moddingx.libx.mod.ModX;
 @Datagen
 public class RecipeProvider extends RecipeProviderBase implements CraftingExtension {
 
-    public RecipeProvider(ModX mod, DataGenerator generator) {
-        super(mod, generator);
+    public RecipeProvider(ModX mod, PackOutput packOutput) {
+        super(mod, packOutput);
     }
 
     @Override

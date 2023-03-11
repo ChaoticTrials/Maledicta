@@ -8,7 +8,7 @@ apply plugin: 'org.moddingx.modgradle.cursedep'
 repositories {
     maven {
         name = "JEI"
-        url = "https://dvs1.progwml6.com/files/maven/"
+        url = "https://maven.blamejared.com/"
     }
     maven {
         name = "MelanX Maven"
@@ -21,10 +21,10 @@ repositories {
 }
 
 dependencies {
-    annotationProcessor "org.moddingx:LibX:1.19.2-4.2.6"
+    annotationProcessor fg.deobf("org.moddingx:LibX:1.19.3-4.3.0")
 
-    implementation fg.deobf("org.moddingx:LibX:1.19.2-4.2.6")
+    implementation fg.deobf("org.moddingx:LibX:1.19.3-4.3.0")
 
-    runtimeOnly fg.deobf("mezz.jei:jei-1.19.2-forge:11.3.0.262")
-    runtimeOnly curse.mod(324717, 4010505)
+    runtimeOnly fg.deobf("mezz.jei:jei-1.19.3-forge:12.3.0.18")
+    runtimeOnly curse.mod(324717, 4330163)
 }

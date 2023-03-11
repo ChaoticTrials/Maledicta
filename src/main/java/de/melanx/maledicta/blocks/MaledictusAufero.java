@@ -7,7 +7,7 @@ import de.melanx.maledicta.lightning.LightningHelper;
 import de.melanx.maledicta.network.ModNetwork;
 import de.melanx.maledicta.util.Util;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
@@ -41,7 +41,7 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
         super(properties);
         this.mod = mod;
         //noinspection ConstantConditions
-        this.item = new BlockItem(this, itemProperties.tab(mod.tab));
+        this.item = new BlockItem(this, itemProperties);
     }
 
     @Override
@@ -202,7 +202,7 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
 
     @Override
     public void registerAdditional(RegistrationContext ctx, EntryCollector builder) {
-        builder.register(Registry.ITEM_REGISTRY, this.item);
+        builder.register(Registries.ITEM, this.item);
     }
 
     record LeveledEnchantment(Enchantment enchantment, int level) {

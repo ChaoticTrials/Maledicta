@@ -10,6 +10,7 @@ import de.melanx.maledicta.registration.ModEnchantments;
 import de.melanx.maledicta.util.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,6 +24,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.CreativeModeTabEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -32,6 +34,17 @@ import net.minecraftforge.fml.common.Mod;
 public class EventListener {
 
     private long nextTime = 0L;
+
+    @SubscribeEvent
+    public static void registerTab(CreativeModeTabEvent.Register event) {
+        event.registerCreativeModeTab(Maledicta.getInstance().resource("tab"), builder -> {
+            builder.title(Component.literal("Maledicta"));
+            builder.icon(() -> new ItemStack(ModBlocks.maledictusAufero))
+                    .displayItems((enabledFlags, output, hasPermissions) -> {
+                        output.accept(new ItemStack(ModBlocks.maledictusAufero));
+                    });
+        });
+    }
 
     @SubscribeEvent
     public void attachItemCapability(AttachCapabilitiesEvent<ItemStack> event) {

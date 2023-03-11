@@ -2,7 +2,7 @@ package de.melanx.maledicta.util;
 
 import de.melanx.maledicta.Maledicta;
 import de.melanx.maledicta.api.ApplyItemCurseEvent;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -31,7 +31,7 @@ public class Util {
         for (Tag tag : list) {
             String id = ((CompoundTag) tag).getString("id");
             //noinspection ConstantConditions,deprecation
-            if (id.equals(Registry.ENCHANTMENT.getKey(enchantment).toString())) {
+            if (id.equals(BuiltInRegistries.ENCHANTMENT.getKey(enchantment).toString())) {
                 list.remove(tag);
                 break;
             }

@@ -2,13 +2,13 @@ package de.melanx.maledicta.lightning;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Matrix4f;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LightningBoltRenderer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LightningBolt;
+import org.joml.Matrix4f;
 
 import javax.annotation.Nonnull;
 import java.awt.Color;

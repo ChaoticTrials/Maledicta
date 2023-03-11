@@ -3,7 +3,7 @@ package de.melanx.maledicta.mixin;
 import de.melanx.maledicta.registration.ModPoiTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.entity.ai.village.poi.PoiType;
@@ -28,7 +28,7 @@ public abstract class ServerLevelMixin {
     )
     private Optional<BlockPos> addCustomBlockToPoi(PoiManager instance, Predicate<Holder<PoiType>> typePredicate, Predicate<BlockPos> posPredicate, BlockPos pos, int distance, PoiManager.Occupancy status) {
         //noinspection OptionalGetWithoutIsPresent,deprecation
-        return instance.findClosest(predicate -> predicate.is(PoiTypes.LIGHTNING_ROD) || predicate.is(Registry.POINT_OF_INTEREST_TYPE.getResourceKey(ModPoiTypes.poiType).get()), blockPos -> {
+        return instance.findClosest(predicate -> predicate.is(PoiTypes.LIGHTNING_ROD) || predicate.is(BuiltInRegistries.POINT_OF_INTEREST_TYPE.getResourceKey(ModPoiTypes.poiType).get()), blockPos -> {
             return blockPos.getY() == ((ServerLevel) (Object) this).getHeight(Heightmap.Types.WORLD_SURFACE, blockPos.getX(), blockPos.getZ()) - 1;
         }, pos, 128, PoiManager.Occupancy.ANY);
     }

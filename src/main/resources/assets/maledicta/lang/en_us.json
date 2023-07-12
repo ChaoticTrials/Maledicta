@@ -1,12 +1,12 @@
 {
   "block.maledicta.maledictus_aufero": "Maledictus Aufero",
 
-  "death.attack.maledicta_karma": "%1$s felt karma for hurting others",
+  "death.attack.maledicta_karma": "%1$s experienced karma for harming others",
 
   "enchantment.maledicta.curse_of_karma": "Curse of Karma",
-  "enchantment.maledicta.curse_of_karma.desc": "The damager will take the same damage amount like the receiver, too.",
+  "enchantment.maledicta.curse_of_karma.desc": "The attacker will receive the same amount of damage as the victim.",
   "enchantment.maledicta.curse_of_kindness": "Curse of Kindness",
-  "enchantment.maledicta.curse_of_kindness.desc": "The damager will not hurt but heal.",
+  "enchantment.maledicta.curse_of_kindness.desc": "Instead of causing harm, the attacker will heal the target.",
   "enchantment.maledicta.curse_of_randomness": "Curse of Randomness",
-  "enchantment.maledicta.curse_of_randomness.desc": "Each time the item loses durability, the enchantments will be shuffled. Except curses."
+  "enchantment.maledicta.curse_of_randomness.desc": "Each time the item loses durability, its enchantments will be shuffled, except for curses."
 }

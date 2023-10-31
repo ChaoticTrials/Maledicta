@@ -29,7 +29,7 @@ public class LightningBoltMixin {
         if (state.is(ModBlocks.maledictusAufero)) {
             LightningBolt lightning = (LightningBolt) (Object) this;
             lightning.setVisualOnly(ModConfig.safeLightnings);
-            ((MaledictusAufero) state.getBlock()).onLightningStrike(state, lightning.level, lightning.getStrikePosition());
+            ((MaledictusAufero) state.getBlock()).onLightningStrike(state, lightning.level(), lightning.getStrikePosition());
             return false;
         }
 

@@ -2,19 +2,20 @@ package de.melanx.maledicta;
 
 import de.melanx.maledicta.capabilities.EnergyCollector;
 import de.melanx.maledicta.capabilities.EnergyCollectorImpl;
+import de.melanx.maledicta.data.DamageTypeProvider;
 import de.melanx.maledicta.lightning.ColoredLightningBoltRenderer;
 import de.melanx.maledicta.lightning.LightningHelper;
 import de.melanx.maledicta.registration.ModBlocks;
-import de.melanx.maledicta.registration.ModDamageSources;
 import de.melanx.maledicta.registration.ModEnchantments;
 import de.melanx.maledicta.util.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.chat.Component;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
@@ -24,7 +25,6 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.CreativeModeTabEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -34,17 +34,6 @@ import net.minecraftforge.fml.common.Mod;
 public class EventListener {
 
     private long nextTime = 0L;
-
-    @SubscribeEvent
-    public static void registerTab(CreativeModeTabEvent.Register event) {
-        event.registerCreativeModeTab(Maledicta.getInstance().resource("tab"), builder -> {
-            builder.title(Component.literal("Maledicta"));
-            builder.icon(() -> new ItemStack(ModBlocks.maledictusAufero))
-                    .displayItems((enabledFlags, output, hasPermissions) -> {
-                        output.accept(new ItemStack(ModBlocks.maledictusAufero));
-                    });
-        });
-    }
 
     @SubscribeEvent
     public void attachItemCapability(AttachCapabilitiesEvent<ItemStack> event) {
@@ -81,12 +70,12 @@ public class EventListener {
                     if (cap.negativeEnergy().test()) {
                         if (Util.tryToApplyCurse(player, stack)) {
                             // summon custom lightning
-                            LightningBolt entity = EntityType.LIGHTNING_BOLT.create(player.level);
+                            LightningBolt entity = EntityType.LIGHTNING_BOLT.create(player.level());
                             //noinspection ConstantConditions
                             LightningHelper.setColor(entity, 0xFF0000);
                             entity.moveTo(player.position());
                             entity.setVisualOnly(true);
-                            player.level.addFreshEntity(entity);
+                            player.level().addFreshEntity(entity);
                         }
                     }
                 });
@@ -95,7 +84,7 @@ public class EventListener {
     }
 
     @SubscribeEvent
-    public void onLevelTick(TickEvent.LevelTickEvent event) {
+    public void onlevelTick(TickEvent.LevelTickEvent event) {
         if (!ModConfig.NegativeEnergy.enabled) {
             return;
         }
@@ -112,7 +101,7 @@ public class EventListener {
         MinecraftServer server = event.level.getServer();
         //noinspection ConstantConditions
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            if (event.level == player.level && player.level == server.getLevel(Level.NETHER)) {
+            if (event.level == player.level() && player.level() == server.getLevel(Level.NETHER)) {
                 for (ItemStack stack : player.getHandSlots()) {
                     stack.getCapability(EnergyCollectorImpl.INSTANCE).ifPresent(cap -> {
                         cap.addEnergy(ModConfig.NegativeEnergy.netherAddition);
@@ -125,7 +114,7 @@ public class EventListener {
     @SubscribeEvent
     public void onDealDamage(LivingHurtEvent event) {
         if (event.getSource().getEntity() instanceof LivingEntity causer) {
-            RandomSource random = causer.level.random;
+            RandomSource random = causer.level().random;
             LivingEntity victim = event.getEntity();
 
             if (ModConfig.NegativeEnergy.enabled && victim.getMobType() == MobType.UNDEAD) {
@@ -136,13 +125,13 @@ public class EventListener {
 
             boolean receiveKarma = Util.enchantmentInHand(causer, ModEnchantments.curseOfKarma);
             if (receiveKarma && causer.getRandom().nextDouble() <= ModConfig.karmaChance) {
-                causer.hurt(ModDamageSources.KARMA, event.getAmount());
+                causer.hurt(new DamageSource(causer.level().registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DamageTypeProvider.KARMA)), event.getAmount());
             }
 
             boolean healDontHurt = Util.enchantmentInHand(causer, ModEnchantments.curseOfKindness);
             if (healDontHurt && causer.getRandom().nextDouble() <= ModConfig.kindnessChance) {
                 victim.heal(event.getAmount());
-                ((ServerLevel) victim.level).sendParticles(ParticleTypes.HEART, victim.getRandomX(1), victim.getRandomY() + 0.5, victim.getRandomZ(1), 10, 0, 0, 0, random.nextGaussian() * 0.02D);
+                ((ServerLevel) victim.level()).sendParticles(ParticleTypes.HEART, victim.getRandomX(1), victim.getRandomY() + 0.5, victim.getRandomZ(1), 10, 0, 0, 0, random.nextGaussian() * 0.02D);
                 event.setCanceled(true);
             }
         }
@@ -152,7 +141,7 @@ public class EventListener {
     public void onEntityJoinLevel(EntityJoinLevelEvent event) {
         if (event.getEntity() instanceof LightningBolt lightning) {
             BlockPos strikePosition = lightning.getStrikePosition();
-            if (lightning.level.getBlockState(strikePosition).is(ModBlocks.maledictusAufero)) {
+            if (lightning.level().getBlockState(strikePosition).is(ModBlocks.maledictusAufero)) {
                 lightning.setDamage(0);
                 lightning.setVisualOnly(ModConfig.safeLightnings);
                 LightningHelper.setCursed(lightning);

@@ -39,5 +39,6 @@
     "recipes": [
       "maledicta:maledictus_aufero"
     ]
-  }
+  },
+  "sends_telemetry_event": false
 }

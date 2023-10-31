@@ -62,7 +62,7 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
         if (MinecraftForge.EVENT_BUS.post(new MaledictusAuferoEvent(level, state, pos, items, cursedItems))) return;
 
         if (ModConfig.onlyTransferCurses) {
-            if (cursedItems.size() == 0) {
+            if (cursedItems.isEmpty()) {
                 return;
             }
 

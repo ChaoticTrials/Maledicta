@@ -1,30 +1,26 @@
 buildscript {
-    apply from: 'https://moddingx.github.io/ModUtils/v4/buildscript.gradle', to: buildscript
+    apply from: 'https://moddingx.github.io/ModUtils/v5/buildscript.gradle', to: buildscript
 }
 
-apply from: 'https://moddingx.github.io/ModUtils/v4/mod.gradle'
+apply from: 'https://moddingx.github.io/ModUtils/v5/mod.gradle'
 apply plugin: 'org.moddingx.modgradle.cursedep'
 
 repositories {
     maven {
-        name = "JEI"
-        url = "https://maven.blamejared.com/"
+        name = "Mod Maven"
+        url = "https://modmaven.dev/"
     }
     maven {
         name = "MelanX Maven"
         url = "https://maven.melanx.de/"
     }
-    maven {
-        name = "Curios"
-        url = "https://maven.theillusivec4.top/"
-    }
 }
 
 dependencies {
-    annotationProcessor fg.deobf("org.moddingx:LibX:1.19.3-4.3.0")
+    annotationProcessor fg.deobf("org.moddingx:LibX:1.20.1-5.0.5")
 
-    implementation fg.deobf("org.moddingx:LibX:1.19.3-4.3.0")
+    implementation fg.deobf("org.moddingx:LibX:1.20.1-5.0.5")
 
-    runtimeOnly fg.deobf("mezz.jei:jei-1.19.3-forge:12.3.0.18")
-    runtimeOnly curse.mod(324717, 4330163)
+    runtimeOnly fg.deobf("mezz.jei:jei-1.20.1-forge:15.0.0.12")
+    runtimeOnly curse.mod(324717, 4768593)
 }

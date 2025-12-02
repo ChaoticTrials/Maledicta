@@ -11,5 +11,5 @@ import org.moddingx.libx.annotation.registration.RegisterClass;
 @RegisterClass(registry = "BLOCK", priority = -1)
 public class ModBlocks {
 
-    public static final Block maledictusAufero = new MaledictusAufero(Maledicta.getInstance(), BlockBehaviour.Properties.copy(Blocks.LIGHTNING_ROD), new Item.Properties());
+    public static final Block maledictusAufero = new MaledictusAufero(Maledicta.getInstance(), BlockBehaviour.Properties.ofLegacyCopy(Blocks.LIGHTNING_ROD), new Item.Properties());
 }

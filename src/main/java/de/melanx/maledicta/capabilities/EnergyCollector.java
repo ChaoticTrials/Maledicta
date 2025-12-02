@@ -1,26 +1,58 @@
 package de.melanx.maledicta.capabilities;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.melanx.maledicta.util.Chance;
+import net.minecraft.util.Mth;
 
-public interface EnergyCollector {
+public class EnergyCollector {
 
-    /**
-     * Range from 0 to 1
-     */
-    Chance negativeEnergy();
+    public static final Codec<EnergyCollector> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Chance.CODEC.fieldOf("chance").forGetter(EnergyCollector::negativeEnergy),
+            Codec.INT.fieldOf("purification_processes").forGetter(EnergyCollector::purificationProcesses)
+    ).apply(instance, EnergyCollector::new));
 
-    /**
-     * Adds negative energy
-     */
-    void addEnergy(double addition);
+    public static final EnergyCollector EMPTY = new EnergyCollector(new Chance(0), 0);
 
-    /**
-     * Removes negative energy
-     */
-    void removeEnergy(double subtraction);
+    private Chance negativeEnergy;
+    private int purificationProcesses;
 
-    /**
-     * Sets negative energy to exact value
-     */
-    void setEnergy(double energy);
+    public EnergyCollector(Chance negativeEnergy, int purificationProcesses) {
+        this.negativeEnergy = negativeEnergy;
+        this.purificationProcesses = purificationProcesses;
+    }
+
+    public Chance negativeEnergy() {
+        return this.negativeEnergy;
+    }
+
+    private int purificationProcesses() {
+        return this.purificationProcesses;
+    }
+
+    public void addEnergy(double addition) {
+        if (addition >= 0) {
+            this.negativeEnergy.set(Mth.clamp(this.negativeEnergy.get() + addition, 0, 100));
+        }
+    }
+
+    public void removeEnergy(double subtraction) {
+        if (subtraction >= 0) {
+            this.negativeEnergy.set(Mth.clamp(this.negativeEnergy.get() - subtraction, 0, 100));
+        }
+    }
+
+    public void setEnergy(double energy) {
+        this.negativeEnergy = new Chance(energy);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

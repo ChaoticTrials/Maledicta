@@ -3,11 +3,11 @@ package de.melanx.maledicta;
 import de.melanx.maledicta.data.*;
 import de.melanx.maledicta.network.ModNetwork;
 import de.melanx.maledicta.registration.ModCreativeTab;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import org.moddingx.libx.datagen.DatagenSystem;
 import org.moddingx.libx.mod.ModXRegistration;
 import org.slf4j.Logger;
@@ -20,22 +20,24 @@ public final class Maledicta extends ModXRegistration {
 
     private static Maledicta instance;
     private static ModNetwork network;
+    private static ModCreativeTab creativeTab;
     public final Logger logger = LoggerFactory.getLogger(Maledicta.class);
 
-    public Maledicta() {
+    public Maledicta(IEventBus modBus, Dist dist) {
         instance = this;
+        creativeTab = new ModCreativeTab(this);
         network = new ModNetwork(this);
 
-        MinecraftForge.EVENT_BUS.register(new EventListener());
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(ModCreativeTab::onCreateTabs);
-
         DatagenSystem.create(this, system -> {
-            system.addDataProvider(BlockLootProvider::new);
+            system.addRegistryProvider(BlockLootProvider::new);
+            system.addRegistryProvider(DamageTypeProvider::new);
+            system.addRegistryProvider(EnchantmentProvider::new);
+
             system.addDataProvider(BlockStateProvider::new);
+            system.addDataProvider(EnchantmentTagsProvider::new);
             system.addDataProvider(ItemModelProvider::new);
             system.addDataProvider(RecipeProvider::new);
-
-            system.addRegistryProvider(DamageTypeProvider::new);
+            system.addDataProvider(ItemTagsProvider::new);
         });
     }
 
@@ -57,5 +59,10 @@ public final class Maledicta extends ModXRegistration {
     @Nonnull
     public static ModNetwork getNetwork() {
         return network;
+    }
+
+    @Nonnull
+    public static ModCreativeTab getCreativeTab() {
+        return creativeTab;
     }
 }

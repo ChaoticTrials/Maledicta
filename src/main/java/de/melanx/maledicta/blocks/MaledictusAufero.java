@@ -2,20 +2,25 @@ package de.melanx.maledicta.blocks;
 
 import de.melanx.maledicta.ModConfig;
 import de.melanx.maledicta.api.MaledictusAuferoEvent;
-import de.melanx.maledicta.capabilities.EnergyCollectorImpl;
-import de.melanx.maledicta.lightning.LightningHelper;
+import de.melanx.maledicta.capabilities.EnergyCollector;
+import de.melanx.maledicta.lightning.ColoredLightningBoltEntity;
 import de.melanx.maledicta.network.ModNetwork;
+import de.melanx.maledicta.registration.ModDataComponentTypes;
+import de.melanx.maledicta.registration.ModEntities;
 import de.melanx.maledicta.util.Util;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LevelEvent;
@@ -23,7 +28,7 @@ import net.minecraft.world.level.block.LightningRodBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.MinecraftForge;
+import net.neoforged.neoforge.common.NeoForge;
 import org.apache.commons.lang3.tuple.Pair;
 import org.moddingx.libx.mod.ModX;
 import org.moddingx.libx.registration.Registerable;
@@ -31,6 +36,7 @@ import org.moddingx.libx.registration.RegistrationContext;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MaledictusAufero extends LightningRodBlock implements Registerable {
 
@@ -55,11 +61,19 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
         List<ItemEntity> items = new ArrayList<>(level.getEntitiesOfClass(ItemEntity.class, expandBox(new Vec3(pos.getX(), pos.getY(), pos.getZ()), 3)).stream()
                 .filter(item -> Util.isEnchantable(item.getItem()))
                 .toList());
+        HolderLookup.RegistryLookup<Enchantment> enchantmentRegistryLookup = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+
         List<ItemEntity> cursedItems = items.stream()
-                .filter(item -> item.getItem().getAllEnchantments().entrySet().stream().anyMatch(entry -> entry.getKey().isCurse()))
+                .filter(item -> item.getItem()
+                        .getAllEnchantments(enchantmentRegistryLookup)
+                        .entrySet()
+                        .stream()
+                        .anyMatch(entry -> entry.getKey().is(EnchantmentTags.CURSE)))
                 .toList();
 
-        if (MinecraftForge.EVENT_BUS.post(new MaledictusAuferoEvent(level, state, pos, items, cursedItems))) return;
+        if (NeoForge.EVENT_BUS.post(new MaledictusAuferoEvent(level, state, pos, items, cursedItems)).isCanceled()) {
+            return;
+        }
 
         if (ModConfig.onlyTransferCurses) {
             if (cursedItems.isEmpty()) {
@@ -91,17 +105,17 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
 
                 hasLightning.add(first.getUUID());
                 hasLightning.add(second.getUUID());
-                LeveledEnchantment firstCurse = this.getRandomCurse(first.getItem(), level.random);
-                LeveledEnchantment secondCurse = this.getRandomCurse(second.getItem(), level.random);
+                LeveledEnchantment firstCurse = this.getRandomCurse(first.getItem(), level.random, enchantmentRegistryLookup);
+                LeveledEnchantment secondCurse = this.getRandomCurse(second.getItem(), level.random, enchantmentRegistryLookup);
 
                 boolean enchantFirst = false;
                 boolean enchantSecond = false;
                 if (secondCurse != null) {
-                    enchantFirst = first.getItem().getEnchantmentLevel(secondCurse.enchantment) == 0 && secondCurse.enchantment.canEnchant(first.getItem());
+                    enchantFirst = first.getItem().getEnchantmentLevel(secondCurse.enchantment) == 0 && first.getItem().supportsEnchantment(secondCurse.enchantment);
                 }
 
                 if (firstCurse != null) {
-                    enchantSecond = second.getItem().getEnchantmentLevel(firstCurse.enchantment) == 0 && firstCurse.enchantment.canEnchant(second.getItem());
+                    enchantSecond = second.getItem().getEnchantmentLevel(firstCurse.enchantment) == 0 && second.getItem().supportsEnchantment(firstCurse.enchantment);
                 }
 
                 if (enchantFirst || enchantSecond) {
@@ -130,7 +144,7 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
         Set<UUID> hasLightning = new HashSet<>();
         Set<Pair<UUID, LeveledEnchantment>> collectedCurses = new HashSet<>();
         cursedItems.forEach(item -> {
-            LeveledEnchantment randomCurse = this.getRandomCurse(item.getItem(), level.random);
+            LeveledEnchantment randomCurse = this.getRandomCurse(item.getItem(), level.random, enchantmentRegistryLookup);
             if (randomCurse != null) {
                 collectedCurses.add(Pair.of(item.getUUID(), randomCurse));
                 Util.unenchant(item.getItem(), randomCurse.enchantment);
@@ -143,7 +157,7 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
 
         collectedCurses.forEach(curse -> {
             ItemEntity randomItem = items.get(level.random.nextInt(items.size()));
-            if (randomItem.getUUID() != curse.getLeft() && curse.getValue().enchantment.canEnchant(randomItem.getItem()) && randomItem.getItem().getEnchantmentLevel(curse.getValue().enchantment) < 1) {
+            if (randomItem.getUUID() != curse.getLeft() && randomItem.getItem().supportsEnchantment(curse.getValue().enchantment) && randomItem.getItem().getEnchantmentLevel(curse.getValue().enchantment) < 1) {
                 randomItem.getItem().enchant(curse.getValue().enchantment, curse.getValue().level);
                 ModNetwork.updateItemEnchantments(randomItem);
             }
@@ -153,45 +167,51 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
         this.handleNegativeEnergy(level, hasLightning, items);
     }
 
-    private LeveledEnchantment getRandomCurse(ItemStack stack, RandomSource random) {
-        Map<Enchantment, Integer> allEnchantments = stack.getAllEnchantments();
-        List<Map.Entry<Enchantment, Integer>> curses = allEnchantments.entrySet().stream().filter(entry -> entry.getKey().isCurse()).toList();
+    private LeveledEnchantment getRandomCurse(ItemStack stack, RandomSource random, HolderLookup.RegistryLookup<Enchantment> enchantmentRegistryLookup) {
+        ItemEnchantments allEnchantments = stack.getAllEnchantments(enchantmentRegistryLookup);
+        Object2IntOpenHashMap<Holder<Enchantment>> curses = allEnchantments.entrySet()
+                .stream()
+                .filter(entry -> entry.getKey().is(EnchantmentTags.CURSE))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Integer::sum, Object2IntOpenHashMap::new));
 
         if (curses.isEmpty()) {
             return null;
         }
 
-        Map.Entry<Enchantment, Integer> randomCurse = curses.get(random.nextInt(curses.size()));
+        int randomIndex = random.nextInt(curses.size());
+        Holder<Enchantment> randomCurse = curses.keySet().stream().toList().get(randomIndex);
 
-        return new LeveledEnchantment(randomCurse.getKey(), randomCurse.getValue());
+        return new LeveledEnchantment(randomCurse, curses.getInt(randomCurse));
     }
 
     private void handleNegativeEnergy(Level level, Set<UUID> noLightning, List<ItemEntity> items) {
         if (ModConfig.NegativeEnergy.enabled) {
             for (ItemEntity item : items) {
-                item.getItem().getCapability(EnergyCollectorImpl.INSTANCE).ifPresent(cap -> {
-                    cap.setEnergy(cap.negativeEnergy().get() / 2);
+                ItemStack stack = item.getItem();
+                if (stack.has(ModDataComponentTypes.energyCollector)) {
+                    EnergyCollector energyCollector = stack.getOrDefault(ModDataComponentTypes.energyCollector, EnergyCollector.EMPTY);
+                    energyCollector.setEnergy(energyCollector.negativeEnergy().get() / 2);
                     ModNetwork.updateItemEnchantments(item);
 
                     if (!noLightning.contains(item.getUUID())) {
-                        LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(level);
+                        ColoredLightningBoltEntity lightning = ModEntities.lightningBolt.create(level);
                         //noinspection ConstantConditions
                         lightning.setVisualOnly(true);
                         lightning.moveTo(item.position());
-                        LightningHelper.setColor(lightning, 0x00FF00);
+                        lightning.setColor(0x00FF00);
                         level.addFreshEntity(lightning);
                     }
-                });
+                }
             }
         }
     }
 
     private void summonLightning(Level level, Vec3 pos) {
-        LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(level);
+        ColoredLightningBoltEntity lightning = ModEntities.lightningBolt.create(level);
         //noinspection ConstantConditions
         lightning.setVisualOnly(true);
         lightning.moveTo(pos);
-        LightningHelper.setColor(lightning, Util.LIGHTNING_COLOR);
+        lightning.setColor(Util.LIGHTNING_COLOR);
         level.addFreshEntity(lightning);
     }
 
@@ -205,7 +225,5 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
         builder.register(Registries.ITEM, this.item);
     }
 
-    record LeveledEnchantment(Enchantment enchantment, int level) {
-        // NO-OP
-    }
+    record LeveledEnchantment(Holder<Enchantment> enchantment, int level) {}
 }

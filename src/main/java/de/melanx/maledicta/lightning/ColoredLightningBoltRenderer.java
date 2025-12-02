@@ -24,6 +24,10 @@ public class ColoredLightningBoltRenderer extends LightningBoltRenderer {
     // [Vanilla copy] + color
     @Override
     public void render(@Nonnull LightningBolt lightning, float entityYaw, float partialTick, @Nonnull PoseStack poseStack, @Nonnull MultiBufferSource buffer, int packedLight) {
+        if (!(lightning instanceof ColoredLightningBoltEntity coloredLightning)) {
+            return;
+        }
+
         float[] afloat = new float[8];
         float[] afloat1 = new float[8];
         float f = 0.0F;
@@ -40,7 +44,7 @@ public class ColoredLightningBoltRenderer extends LightningBoltRenderer {
         VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.lightning());
         Matrix4f matrix4f = poseStack.last().pose();
 
-        Color color = this.getColor(lightning);
+        Color color = this.getColor(coloredLightning);
         for (int j = 0; j < 4; ++j) {
             RandomSource random1 = RandomSource.create(lightning.seed);
 
@@ -88,8 +92,8 @@ public class ColoredLightningBoltRenderer extends LightningBoltRenderer {
         }
     }
 
-    private Color getColor(LightningBolt lightning) {
-        int hex = LightningHelper.getColor(lightning);
+    private Color getColor(ColoredLightningBoltEntity lightning) {
+        int hex = lightning.getColor();
 
         if (hex < 0) {
             return DEFAULT_COLOR;

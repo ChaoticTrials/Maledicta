@@ -1,26 +1,75 @@
-buildscript {
-    apply from: 'https://moddingx.github.io/ModUtils/v5/buildscript.gradle', to: buildscript
+plugins {
+    id 'org.moddingx.modgradle.meta' version '5.0.4'
 }
-
-apply from: 'https://moddingx.github.io/ModUtils/v5/mod.gradle'
-apply plugin: 'org.moddingx.modgradle.cursedep'
 
 repositories {
     maven {
-        name = "Mod Maven"
         url = "https://modmaven.dev/"
     }
-    maven {
-        name = "MelanX Maven"
-        url = "https://maven.melanx.de/"
+}
+
+var dev = System.getenv('IS_DEV')?.toBoolean() ?: false
+var baseVersion = '21.1'
+var libxVersion = '1.21.1-6.0.6'
+var jeiVersion = '19.25.0.324'
+
+mod.configure {
+    modid 'maledicta'
+    group 'de.melanx'
+    versioning {
+        if (dev) {
+            def gitCommitHash = ['git', 'rev-parse', 'HEAD'].execute().text.trim()
+            constant baseVersion + (gitCommitHash ? "-${gitCommitHash}" : '')
+        } else {
+            base baseVersion
+            maven 'https://maven.melanx.de/release'
+        }
+    }
+
+    neoforge project.hasProperty('neo_version') ? project.neo_version : "${baseVersion}.213"
+
+    license 'The Apache License, Version 2.0'
+    github 'ChaoticTrials/Maledicta'
+
+    artifacts {
+        sources {
+            publishToRepositories()
+        }
+    }
+
+    changelog {
+        def lines = defaultChangelog.toString().split('\n')
+        def filteredChangelog = lines.findAll { !it.startsWith('- [[meta]') }.join('\n')
+
+        return filteredChangelog
+    }
+
+
+    publishing {
+        maven {
+            name 'melanx'
+            url 'https://maven.melanx.de/release'
+            credentials(PasswordCredentials)
+        }
+    }
+
+    upload {
+        all {
+            type 'release'
+            require 'libx'
+        }
+        curseforge {
+            projectId 684453
+        }
+        modrinth {
+            projectId 'ICVjNC7Q'
+        }
     }
 }
 
 dependencies {
-    annotationProcessor fg.deobf("org.moddingx:LibX:1.20.1-5.0.5")
+    annotationProcessor "org.moddingx:LibX:${libxVersion}"
 
-    implementation fg.deobf("org.moddingx:LibX:1.20.1-5.0.5")
-
-    runtimeOnly fg.deobf("mezz.jei:jei-1.20.1-forge:15.0.0.12")
-    runtimeOnly curse.mod(324717, 4768593)
+    implementation "org.moddingx:LibX:${libxVersion}"
+    runtimeOnly "mezz.jei:jei-1.${baseVersion}-neoforge:${jeiVersion}"
 }

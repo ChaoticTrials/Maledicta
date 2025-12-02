@@ -4,16 +4,17 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 import java.util.List;
 
 /**
- * The event is fired on the {@link net.minecraftforge.common.MinecraftForge#EVENT_BUS} whenever a lightning bolt
+ * The event is fired on the {@link net.neoforged.neoforge.common.NeoForge#EVENT_BUS} whenever a lightning bolt
  * hits a maledictus aufero. The event is cancelable, if canceled the maledictus aufero won't have any effects on
  * the nearby items. The event does not have a result.
  */
-public class MaledictusAuferoEvent extends Event {
+public class MaledictusAuferoEvent extends Event implements ICancellableEvent {
     
     private final Level level;
     private final BlockState state;
@@ -54,10 +55,5 @@ public class MaledictusAuferoEvent extends Event {
      */
     public List<ItemEntity> getCursedItems() {
         return this.cursedItems;
-    }
-
-    @Override
-    public boolean isCancelable() {
-        return true;
     }
 }

@@ -3,10 +3,10 @@
   "category": "misc",
   "key": {
     "B": {
-      "tag": "forge:ingots/netherite"
+      "tag": "c:ingots/netherite"
     },
     "O": {
-      "tag": "forge:ingots/netherite"
+      "tag": "c:ingots/netherite"
     }
   },
   "pattern": [
@@ -15,7 +15,7 @@
     "O"
   ],
   "result": {
-    "item": "maledicta:maledictus_aufero"
-  },
-  "show_notification": true
+    "count": 1,
+    "id": "maledicta:maledictus_aufero"
+  }
 }

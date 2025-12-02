@@ -1,7 +1,7 @@
 package de.melanx.maledicta.data;
 
 import de.melanx.maledicta.registration.ModBlocks;
-import net.minecraftforge.common.Tags;
+import net.neoforged.neoforge.common.Tags;
 import org.moddingx.libx.datagen.DatagenContext;
 import org.moddingx.libx.datagen.provider.recipe.RecipeProviderBase;
 import org.moddingx.libx.datagen.provider.recipe.crafting.CraftingExtension;

@@ -1,55 +1,55 @@
 package de.melanx.maledicta.network;
 
+import de.melanx.maledicta.Maledicta;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.neoforged.neoforge.network.registration.HandlerThread;
 import org.moddingx.libx.network.PacketHandler;
-import org.moddingx.libx.network.PacketSerializer;
 
-import java.util.function.Supplier;
+import javax.annotation.Nonnull;
 
-public record UpdateItemEnchantments(int id, CompoundTag tag) {
+public class UpdateItemEnchantments extends PacketHandler<UpdateItemEnchantments.Message> {
 
-    public static class Handler implements PacketHandler<UpdateItemEnchantments> {
+    public static final CustomPacketPayload.Type<Message> TYPE = new CustomPacketPayload.Type<>(Maledicta.getInstance().resource("update_item_enchantments"));
 
-        @Override
-        public Target target() {
-            return Target.MAIN_THREAD;
+    public UpdateItemEnchantments() {
+        super(TYPE, PacketFlow.CLIENTBOUND, Message.CODEC, HandlerThread.MAIN);
+    }
+
+    @Override
+    public void handle(Message msg, IPayloadContext ctx) {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level == null) {
+            return;
         }
 
-        @Override
-        public boolean handle(UpdateItemEnchantments msg, Supplier<NetworkEvent.Context> ctx) {
-            ClientLevel level = Minecraft.getInstance().level;
-            if (level == null) return true;
-            Entity item = level.getEntity(msg.id);
-            if (item instanceof ItemEntity) {
-                ((ItemEntity) item).getItem().setTag(msg.tag);
-            }
-
-            return true;
+        Entity item = level.getEntity(msg.id);
+        if (item instanceof ItemEntity entity) {
+            entity.setItem(msg.stack());
         }
     }
 
-    public static class Serializer implements PacketSerializer<UpdateItemEnchantments> {
+    public record Message(int id, ItemStack stack) implements CustomPacketPayload {
 
-        @Override
-        public Class<UpdateItemEnchantments> messageClass() {
-            return UpdateItemEnchantments.class;
-        }
+        public static final StreamCodec<RegistryFriendlyByteBuf, Message> CODEC = StreamCodec.composite(
+                ByteBufCodecs.INT, Message::id,
+                ItemStack.STREAM_CODEC, Message::stack,
+                Message::new
+        );
 
+        @Nonnull
         @Override
-        public void encode(UpdateItemEnchantments msg, FriendlyByteBuf buffer) {
-            buffer.writeInt(msg.id);
-            buffer.writeNbt(msg.tag);
-        }
-
-        @Override
-        public UpdateItemEnchantments decode(FriendlyByteBuf buffer) {
-            return new UpdateItemEnchantments(buffer.readInt(), buffer.readNbt());
+        public Type<? extends CustomPacketPayload> type() {
+            return UpdateItemEnchantments.TYPE;
         }
     }
 }

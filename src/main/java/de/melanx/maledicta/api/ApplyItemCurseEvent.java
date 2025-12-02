@@ -1,27 +1,29 @@
 package de.melanx.maledicta.api;
 
+import net.minecraft.core.Holder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 import javax.annotation.Nullable;
 
 /**
- * The event is fired on the {@link net.minecraftforge.common.MinecraftForge#EVENT_BUS} whenever an item could get
+ * The event is fired on the {@link net.neoforged.neoforge.common.NeoForge#EVENT_BUS} whenever an item could get
  * a new curse due to negative energy. The event is cancelable, if canceled, the curse won't be applied. The event
  * does not have a result.
  */
-public class ApplyItemCurseEvent extends Event {
+public class ApplyItemCurseEvent extends Event implements ICancellableEvent {
 
     private final Player player;
     private final ItemStack stack;
     
     @Nullable
-    private Enchantment enchantment;
+    private Holder<Enchantment> enchantment;
     private boolean force;
 
-    public ApplyItemCurseEvent(Player player, ItemStack stack, @Nullable Enchantment enchantment) {
+    public ApplyItemCurseEvent(Player player, ItemStack stack, @Nullable Holder<Enchantment> enchantment) {
         this.player = player;
         this.stack = stack;
         this.enchantment = enchantment;
@@ -40,7 +42,7 @@ public class ApplyItemCurseEvent extends Event {
      * Gets the enchantment that will be applied.
      */
     @Nullable
-    public Enchantment getEnchantment() {
+    public Holder<Enchantment> getEnchantment() {
         return this.enchantment;
     }
 
@@ -54,7 +56,7 @@ public class ApplyItemCurseEvent extends Event {
     /**
      * Sets the enchantment that will be applied.
      */
-    public void setEnchantment(@Nullable Enchantment enchantment) {
+    public void setEnchantment(@Nullable Holder<Enchantment> enchantment) {
         this.enchantment = enchantment;
     }
 
@@ -63,10 +65,5 @@ public class ApplyItemCurseEvent extends Event {
      */
     public void setForced(boolean force) {
         this.force = force;
-    }
-
-    @Override
-    public boolean isCancelable() {
-        return true;
     }
 }

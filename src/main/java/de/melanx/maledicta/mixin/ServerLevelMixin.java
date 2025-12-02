@@ -27,7 +27,7 @@ public abstract class ServerLevelMixin {
             )
     )
     private Optional<BlockPos> addCustomBlockToPoi(PoiManager instance, Predicate<Holder<PoiType>> typePredicate, Predicate<BlockPos> posPredicate, BlockPos pos, int distance, PoiManager.Occupancy status) {
-        //noinspection OptionalGetWithoutIsPresent,deprecation
+        // noinspection OptionalGetWithoutIsPresent
         return instance.findClosest(predicate -> predicate.is(PoiTypes.LIGHTNING_ROD) || predicate.is(BuiltInRegistries.POINT_OF_INTEREST_TYPE.getResourceKey(ModPoiTypes.poiType).get()), blockPos -> {
             return blockPos.getY() == ((ServerLevel) (Object) this).getHeight(Heightmap.Types.WORLD_SURFACE, blockPos.getX(), blockPos.getZ()) - 1;
         }, pos, 128, PoiManager.Occupancy.ANY);

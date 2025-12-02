@@ -2,10 +2,12 @@ package de.melanx.maledicta.util;
 
 import de.melanx.maledicta.Maledicta;
 import de.melanx.maledicta.api.ApplyItemCurseEvent;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -13,8 +15,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.*;
 
@@ -22,20 +24,13 @@ public class Util {
 
     public static final int LIGHTNING_COLOR = 0x6905F5;
 
-    public static void unenchant(ItemStack stack, Enchantment enchantment) {
-        if (!stack.getOrCreateTag().contains("Enchantments", Tag.TAG_LIST)) {
+    public static void unenchant(ItemStack stack, Holder<Enchantment> enchantment) {
+        ItemEnchantments enchantments = stack.getTagEnchantments();
+        if (enchantments.isEmpty()) {
             return;
         }
 
-        ListTag list = stack.getOrCreateTag().getList("Enchantments", Tag.TAG_COMPOUND);
-        for (Tag tag : list) {
-            String id = ((CompoundTag) tag).getString("id");
-            //noinspection ConstantConditions,deprecation
-            if (id.equals(BuiltInRegistries.ENCHANTMENT.getKey(enchantment).toString())) {
-                list.remove(tag);
-                break;
-            }
-        }
+        EnchantmentHelper.updateEnchantments(stack, enchantmentMap -> enchantmentMap.removeIf(entry -> Objects.equals(entry.getKey(), enchantment.getKey())));
     }
 
     // ItemStack#isEnchantable ignoring existing enchantments
@@ -44,67 +39,76 @@ public class Util {
     }
 
     public static boolean tryToApplyCurse(Player player, ItemStack stack) {
-        List<Enchantment> possibleEnchantments = new ArrayList<>(ForgeRegistries.ENCHANTMENTS.getValues()).stream().filter(enchantment -> enchantment.isCurse() && enchantment.canEnchant(stack)).toList();
+        Registry<Enchantment> enchantments = player.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+        List<Holder.Reference<Enchantment>> possibleEnchantments = enchantments.holders().filter(enchantmentReference -> enchantmentReference.is(EnchantmentTags.CURSE) && stack.supportsEnchantment(enchantmentReference)).toList();
         if (possibleEnchantments.isEmpty()) {
             return false;
         }
 
         RandomSource random = RandomSource.create();
-        Enchantment enchantment = possibleEnchantments.get(random.nextInt(possibleEnchantments.size()));
+        Holder<Enchantment> enchantment = possibleEnchantments.get(random.nextInt(possibleEnchantments.size()));
 
         ApplyItemCurseEvent event = new ApplyItemCurseEvent(player, stack, enchantment);
-        if (MinecraftForge.EVENT_BUS.post(event)) return false;
+        if (NeoForge.EVENT_BUS.post(event).isCanceled()) {
+            return false;
+        }
+
         enchantment = event.getEnchantment();
-        if (enchantment == null) return false;
-        
-        if ((event.isForced() || enchantment.canEnchant(stack)) && stack.getEnchantmentLevel(enchantment) <= 0) {
-            stack.enchant(enchantment, enchantment.getMaxLevel());
+        if (enchantment == null) {
+            return false;
+        }
+
+        if ((event.isForced() || stack.supportsEnchantment(enchantment)) && stack.getEnchantmentLevel(enchantment) <= 0) {
+            stack.enchant(enchantment, Objects.requireNonNull(enchantments.get(enchantment.getKey())).getMaxLevel());
             return true;
         }
 
         return false;
     }
 
-    public static void mixEnchantments(ItemStack stack) {
+    public static void mixEnchantments(ItemStack stack, RegistryAccess registryAccess) {
         RandomSource random = RandomSource.create();
-        List<Map.Entry<Enchantment, Integer>> allEnchantments = new ArrayList<>(stack.getAllEnchantments().entrySet());
-        Map<Enchantment, Integer> futureEnchantments = new HashMap<>();
+        HolderLookup.RegistryLookup<Enchantment> enchantments = registryAccess.lookupOrThrow(Registries.ENCHANTMENT);
+        List<Map.Entry<Holder<Enchantment>, Integer>> allEnchantments = new ArrayList<>(stack.getAllEnchantments(enchantments).entrySet());
+        ItemEnchantments.Mutable futureEnchantments = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
 
-        List<Enchantment> possibleEnchantments = new ArrayList<>(ForgeRegistries.ENCHANTMENTS.getValues());
+        List<Holder<Enchantment>> possibleEnchantments = new ArrayList<>(enchantments.listElements().toList());
 
         // make sure to handle curses first
-        allEnchantments = allEnchantments.stream().sorted(Comparator.comparing(entry -> !entry.getKey().isCurse())).toList();
+        allEnchantments = allEnchantments.stream().sorted(Comparator.comparing(entry -> !entry.getKey().is(EnchantmentTags.CURSE))).toList();
 
         allEnchantments.forEach(entry -> {
-            Enchantment enchantment = entry.getKey();
+            Holder<Enchantment> enchantment = entry.getKey();
             int level = entry.getValue();
-            if (enchantment.isCurse()) {
-                futureEnchantments.put(enchantment, level);
+            if (enchantment.is(EnchantmentTags.CURSE)) {
+                futureEnchantments.set(enchantment, level);
                 possibleEnchantments.remove(enchantment);
                 return;
             }
 
             while (true) {
                 if (possibleEnchantments.isEmpty()) {
-                    futureEnchantments.put(enchantment, level);
+                    futureEnchantments.set(enchantment, level);
                     break;
                 }
 
-                Enchantment potentialEnchantment = possibleEnchantments.get(random.nextInt(possibleEnchantments.size()));
+                Holder<Enchantment> potentialEnchantment = possibleEnchantments.get(random.nextInt(possibleEnchantments.size()));
                 possibleEnchantments.remove(potentialEnchantment);
-                if (potentialEnchantment.canEnchant(stack) && !futureEnchantments.containsKey(potentialEnchantment)) {
-                    futureEnchantments.put(potentialEnchantment, potentialEnchantment.isCurse() ? 1 : level);
+                if (stack.supportsEnchantment(potentialEnchantment) && futureEnchantments.getLevel(potentialEnchantment) == 0) {
+                    futureEnchantments.set(potentialEnchantment, potentialEnchantment.is(EnchantmentTags.CURSE) ? 1 : level);
                     break;
                 }
             }
         });
-        EnchantmentHelper.setEnchantments(futureEnchantments, stack);
-        if (futureEnchantments.size() != allEnchantments.size()) {
+
+
+        EnchantmentHelper.setEnchantments(stack, futureEnchantments.toImmutable());
+        if (futureEnchantments.keySet().size() != allEnchantments.size()) {
             Maledicta.getInstance().logger.warn("It seems like enchantments were deleted on {}, previous enchantments: {}", stack, allEnchantments);
         }
     }
 
-    public static boolean enchantmentInHand(LivingEntity entity, Enchantment enchantment) {
+    public static boolean hasEnchantmentInHand(LivingEntity entity, Holder<Enchantment> enchantment) {
         return entity.getItemInHand(InteractionHand.MAIN_HAND).getEnchantmentLevel(enchantment) >= 1
                 || entity.getItemInHand(InteractionHand.OFF_HAND).getEnchantmentLevel(enchantment) >= 1;
     }

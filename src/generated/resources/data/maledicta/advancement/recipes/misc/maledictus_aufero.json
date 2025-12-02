@@ -5,7 +5,7 @@
       "conditions": {
         "items": [
           {
-            "tag": "forge:ingots/netherite"
+            "items": "#c:ingots/netherite"
           }
         ]
       },
@@ -15,7 +15,7 @@
       "conditions": {
         "items": [
           {
-            "tag": "forge:ingots/netherite"
+            "items": "#c:ingots/netherite"
           }
         ]
       },
@@ -30,15 +30,14 @@
   },
   "requirements": [
     [
+      "has_the_recipe",
       "criterion0",
-      "criterion1",
-      "has_the_recipe"
+      "criterion1"
     ]
   ],
   "rewards": {
     "recipes": [
       "maledicta:maledictus_aufero"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }

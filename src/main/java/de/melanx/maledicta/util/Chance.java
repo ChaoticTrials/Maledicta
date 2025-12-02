@@ -1,10 +1,16 @@
 package de.melanx.maledicta.util;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.util.RandomSource;
 
 import java.text.DecimalFormat;
 
 public class Chance {
+
+    public static final Codec<Chance> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec.DOUBLE.optionalFieldOf("value", 0d).forGetter(Chance::get)
+    ).apply(instance, Chance::new));
 
     private static final RandomSource random = RandomSource.create("SpookyJam2022".hashCode());
     private double value;

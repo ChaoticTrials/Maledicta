@@ -1,12 +1,14 @@
 {
   "block.maledicta.maledictus_aufero": "Maledictus Aufero",
 
-  "death.attack.maledicta_karma": "%1$s spürte Karma für das Verletzen anderer",
+  "death.attack.maledicta_karma.message": "%1$s spürte Karma für das Verletzen anderer",
 
   "enchantment.maledicta.curse_of_karma": "Fluch des Karma",
   "enchantment.maledicta.curse_of_karma.desc": "Der Angreifer wird den gleichen Schaden erleiden wie das Opfer.",
   "enchantment.maledicta.curse_of_kindness": "Fluch der Freundlichkeit",
   "enchantment.maledicta.curse_of_kindness.desc": "Statt Schaden zu verursachen, wird der Angreifer das Ziel heilen.",
   "enchantment.maledicta.curse_of_randomness": "Fluch der Willkür",
-  "enchantment.maledicta.curse_of_randomness.desc": "Jedes Mal, wenn der Gegenstand Haltbarkeit verliert, werden seine Verzauberungen gemischt, mit Ausnahme von Flüchen."
+  "enchantment.maledicta.curse_of_randomness.desc": "Jedes Mal, wenn der Gegenstand Haltbarkeit verliert, werden seine Verzauberungen gemischt, mit Ausnahme von Flüchen.",
+  "enchantment.maledicta.curse_of_fleeting_riches": "Fluch des flüchtigen Reichtums",
+  "enchantment.maledicta.curse_of_fleeting_riches.desc": "Ein Teil der Beute wird unantastbar und verschwindet nach kurzer Zeit."
 }

@@ -1,14 +1,15 @@
 package de.melanx.maledicta.lightning;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LightningBoltRenderer;
+import net.minecraft.client.renderer.entity.state.LightningBoltRenderState;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LightningBolt;
-import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 
 import javax.annotation.Nonnull;
 import java.awt.Color;
@@ -21,79 +22,98 @@ public class ColoredLightningBoltRenderer extends LightningBoltRenderer {
         super(context);
     }
 
-    // [Vanilla copy] + color
+    @Nonnull
     @Override
-    public void render(@Nonnull LightningBolt lightning, float entityYaw, float partialTick, @Nonnull PoseStack poseStack, @Nonnull MultiBufferSource buffer, int packedLight) {
-        if (!(lightning instanceof ColoredLightningBoltEntity coloredLightning)) {
-            return;
-        }
+    public LightningBoltRenderState createRenderState() {
+        return new ColoredLightningBoltRenderState();
+    }
 
-        float[] afloat = new float[8];
-        float[] afloat1 = new float[8];
-        float f = 0.0F;
-        float f1 = 0.0F;
-        RandomSource random = RandomSource.create(lightning.seed);
+    @Override
+    public void extractRenderState(@Nonnull LightningBolt entity, @Nonnull LightningBoltRenderState state, float partialTicks) {
+        super.extractRenderState(entity, state, partialTicks);
 
-        for (int i = 7; i >= 0; --i) {
-            afloat[i] = f;
-            afloat1[i] = f1;
-            f += (float) (random.nextInt(11) - 5);
-            f1 += (float) (random.nextInt(11) - 5);
-        }
-
-        VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.lightning());
-        Matrix4f matrix4f = poseStack.last().pose();
-
-        Color color = this.getColor(coloredLightning);
-        for (int j = 0; j < 4; ++j) {
-            RandomSource random1 = RandomSource.create(lightning.seed);
-
-            for (int k = 0; k < 3; ++k) {
-                int l = 7;
-                int i1 = 0;
-                if (k > 0) {
-                    l = 7 - k;
-                }
-
-                if (k > 0) {
-                    i1 = l - 2;
-                }
-
-                float f2 = afloat[l] - f;
-                float f3 = afloat1[l] - f1;
-
-                for (int j1 = l; j1 >= i1; --j1) {
-                    float f4 = f2;
-                    float f5 = f3;
-                    if (k == 0) {
-                        f2 += (float) (random1.nextInt(11) - 5);
-                        f3 += (float) (random1.nextInt(11) - 5);
-                    } else {
-                        f2 += (float) (random1.nextInt(31) - 15);
-                        f3 += (float) (random1.nextInt(31) - 15);
-                    }
-
-                    float f10 = 0.1F + (float) j * 0.2F;
-                    if (k == 0) {
-                        f10 *= (float) j1 * 0.1F + 1.0F;
-                    }
-
-                    float f11 = 0.1F + (float) j * 0.2F;
-                    if (k == 0) {
-                        f11 *= ((float) j1 - 1.0F) * 0.1F + 1.0F;
-                    }
-
-                    LightningBoltRenderer.quad(matrix4f, vertexConsumer, f2, f3, j1, f4, f5, color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, f10, f11, false, false, true, false);
-                    LightningBoltRenderer.quad(matrix4f, vertexConsumer, f2, f3, j1, f4, f5, color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, f10, f11, true, false, true, true);
-                    LightningBoltRenderer.quad(matrix4f, vertexConsumer, f2, f3, j1, f4, f5, color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, f10, f11, true, true, false, true);
-                    LightningBoltRenderer.quad(matrix4f, vertexConsumer, f2, f3, j1, f4, f5, color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, f10, f11, false, true, false, false);
-                }
-            }
+        if (entity instanceof ColoredLightningBoltEntity colored && state instanceof ColoredLightningBoltRenderState coloredState) {
+            coloredState.color = colored.getColor();
         }
     }
 
-    private Color getColor(ColoredLightningBoltEntity lightning) {
-        int hex = lightning.getColor();
+    // [Vanilla copy] + color
+    @Override
+    public void submit(@Nonnull LightningBoltRenderState state, @Nonnull PoseStack poseStack, @Nonnull SubmitNodeCollector submitNodeCollector, @Nonnull CameraRenderState camera) {
+        if (!(state instanceof ColoredLightningBoltRenderState coloredLightning)) {
+            return;
+        }
+
+        float[] xOffs = new float[8];
+        float[] zOffs = new float[8];
+        float xOff = 0.0F;
+        float zOff = 0.0F;
+        RandomSource random = RandomSource.createThreadLocalInstance(state.seed);
+
+        for (int h = 7; h >= 0; h--) {
+            xOffs[h] = xOff;
+            zOffs[h] = zOff;
+            xOff += random.nextInt(11) - 5;
+            zOff += random.nextInt(11) - 5;
+        }
+
+        float finalXOff = xOff;
+        float finalZOff = zOff;
+
+        submitNodeCollector.submitCustomGeometry(poseStack, RenderTypes.lightning(), (pose, buffer) -> {
+            Matrix4fc poseMatrix = pose.pose();
+
+            Color color = this.getColor(coloredLightning);
+            for (int r = 0; r < 4; r++) {
+                RandomSource randomx = RandomSource.createThreadLocalInstance(state.seed);
+
+                for (int p = 0; p < 3; p++) {
+                    int hs = 7;
+                    int ht = 0;
+                    if (p > 0) {
+                        hs = 7 - p;
+                    }
+
+                    if (p > 0) {
+                        ht = hs - 2;
+                    }
+
+                    float xo0 = xOffs[hs] - finalXOff;
+                    float zo0 = zOffs[hs] - finalZOff;
+
+                    for (int h = hs; h >= ht; h--) {
+                        float xo1 = xo0;
+                        float zo1 = zo0;
+                        if (p == 0) {
+                            xo0 += randomx.nextInt(11) - 5;
+                            zo0 += randomx.nextInt(11) - 5;
+                        } else {
+                            xo0 += randomx.nextInt(31) - 15;
+                            zo0 += randomx.nextInt(31) - 15;
+                        }
+
+                        float rr1 = 0.1F + r * 0.2F;
+                        if (p == 0) {
+                            rr1 *= h * 0.1F + 1.0F;
+                        }
+
+                        float rr2 = 0.1F + r * 0.2F;
+                        if (p == 0) {
+                            rr2 *= (h - 1.0F) * 0.1F + 1.0F;
+                        }
+
+                        LightningBoltRenderer.quad(poseMatrix, buffer, xo0, zo0, h, xo1, zo1, color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, rr1, rr2, false, false, true, false);
+                        LightningBoltRenderer.quad(poseMatrix, buffer, xo0, zo0, h, xo1, zo1, color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, rr1, rr2, true, false, true, true);
+                        LightningBoltRenderer.quad(poseMatrix, buffer, xo0, zo0, h, xo1, zo1, color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, rr1, rr2, true, true, false, true);
+                        LightningBoltRenderer.quad(poseMatrix, buffer, xo0, zo0, h, xo1, zo1, color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, rr1, rr2, false, true, false, false);
+                    }
+                }
+            }
+        });
+    }
+
+    private Color getColor(ColoredLightningBoltRenderState lightning) {
+        int hex = lightning.color;
 
         if (hex < 0) {
             return DEFAULT_COLOR;

@@ -15,7 +15,7 @@ import javax.annotation.Nonnull;
 
 public class HeartbeatEffect extends PacketHandler<HeartbeatEffect.Message> {
 
-    public static final CustomPacketPayload.Type<Message> TYPE = new CustomPacketPayload.Type<>(Maledicta.getInstance().resource("heartbeat_effect"));
+    public static final CustomPacketPayload.Type<Message> TYPE = new CustomPacketPayload.Type<>(Maledicta.getInstance().id("heartbeat_effect"));
 
     public HeartbeatEffect() {
         super(TYPE, PacketFlow.CLIENTBOUND, Message.CODEC, HandlerThread.MAIN);

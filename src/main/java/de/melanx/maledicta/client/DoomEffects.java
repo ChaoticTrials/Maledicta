@@ -101,7 +101,7 @@ public class DoomEffects {
 
     private static float now() {
         Minecraft mc = Minecraft.getInstance();
-        return mc.level == null ? 0 : mc.level.getGameTime() + mc.getTimer().getGameTimeDeltaPartialTick(false);
+        return mc.level == null ? 0 : mc.level.getGameTime() + mc.getDeltaTracker().getGameTimeDeltaPartialTick(false);
     }
 
     private static float elapsed() {

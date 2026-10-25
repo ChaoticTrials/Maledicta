@@ -67,6 +67,6 @@ public class EnchantmentProvider extends EnchantmentProviderBase {
     }
 
     public static ResourceKey<Enchantment> key(String name) {
-        return ResourceKey.create(Registries.ENCHANTMENT, Maledicta.getInstance().resource(name));
+        return ResourceKey.create(Registries.ENCHANTMENT, Maledicta.getInstance().id(name));
     }
 }

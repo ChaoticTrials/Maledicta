@@ -9,9 +9,9 @@ repositories {
 }
 
 var dev = System.getenv('IS_DEV')?.toBoolean() ?: false
-var baseVersion = '21.1'
-var libxVersion = '1.21.1-6.0.6'
-var jeiVersion = '19.25.0.324'
+var baseVersion = '26.1'
+var libxVersion = '26.1.2-7.0.2'
+var jeiVersion = '29.21.0.66'
 
 mod.configure {
     modid 'maledicta'
@@ -26,7 +26,7 @@ mod.configure {
         }
     }
 
-    neoforge project.hasProperty('neo_version') ? project.neo_version : "${baseVersion}.213"
+    neoforge project.hasProperty('neo_version') ? project.neo_version : "${baseVersion}.2.94"
 
     license 'The Apache License, Version 2.0'
     github 'ChaoticTrials/Maledicta'
@@ -72,5 +72,5 @@ dependencies {
     annotationProcessor "org.moddingx:LibX:${libxVersion}"
 
     implementation "org.moddingx:LibX:${libxVersion}"
-    runtimeOnly "mezz.jei:jei-1.${baseVersion}-neoforge:${jeiVersion}"
+    runtimeOnly "mezz.jei:jei-${baseVersion}.2-neoforge:${jeiVersion}"
 }

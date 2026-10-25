@@ -15,6 +15,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -47,7 +48,7 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
         super(properties);
         this.mod = mod;
         //noinspection ConstantConditions
-        this.item = new BlockItem(this, itemProperties);
+        this.item = new BlockItem(this, itemProperties.useBlockDescriptionPrefix());
     }
 
     @Override
@@ -105,8 +106,8 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
 
                 hasLightning.add(first.getUUID());
                 hasLightning.add(second.getUUID());
-                LeveledEnchantment firstCurse = this.getRandomCurse(first.getItem(), level.random, enchantmentRegistryLookup);
-                LeveledEnchantment secondCurse = this.getRandomCurse(second.getItem(), level.random, enchantmentRegistryLookup);
+                LeveledEnchantment firstCurse = this.getRandomCurse(first.getItem(), level.getRandom(), enchantmentRegistryLookup);
+                LeveledEnchantment secondCurse = this.getRandomCurse(second.getItem(), level.getRandom(), enchantmentRegistryLookup);
 
                 boolean enchantFirst = false;
                 boolean enchantSecond = false;
@@ -144,7 +145,7 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
         Set<UUID> hasLightning = new HashSet<>();
         Set<Pair<UUID, LeveledEnchantment>> collectedCurses = new HashSet<>();
         cursedItems.forEach(item -> {
-            LeveledEnchantment randomCurse = this.getRandomCurse(item.getItem(), level.random, enchantmentRegistryLookup);
+            LeveledEnchantment randomCurse = this.getRandomCurse(item.getItem(), level.getRandom(), enchantmentRegistryLookup);
             if (randomCurse != null) {
                 collectedCurses.add(Pair.of(item.getUUID(), randomCurse));
                 Util.unenchant(item.getItem(), randomCurse.enchantment);
@@ -156,7 +157,7 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
         });
 
         collectedCurses.forEach(curse -> {
-            ItemEntity randomItem = items.get(level.random.nextInt(items.size()));
+            ItemEntity randomItem = items.get(level.getRandom().nextInt(items.size()));
             if (randomItem.getUUID() != curse.getLeft() && randomItem.getItem().supportsEnchantment(curse.getValue().enchantment) && randomItem.getItem().getEnchantmentLevel(curse.getValue().enchantment) < 1) {
                 randomItem.getItem().enchant(curse.getValue().enchantment, curse.getValue().level);
                 ModNetwork.updateItemEnchantments(randomItem);
@@ -194,10 +195,10 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
                     ModNetwork.updateItemEnchantments(item);
 
                     if (!noLightning.contains(item.getUUID())) {
-                        ColoredLightningBoltEntity lightning = ModEntities.lightningBolt.create(level);
+                        ColoredLightningBoltEntity lightning = ModEntities.lightningBolt.create(level, EntitySpawnReason.EVENT);
                         //noinspection ConstantConditions
                         lightning.setVisualOnly(true);
-                        lightning.moveTo(item.position());
+                        lightning.snapTo(item.position());
                         lightning.setColor(0x00FF00);
                         level.addFreshEntity(lightning);
                     }
@@ -207,10 +208,10 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
     }
 
     private void summonLightning(Level level, Vec3 pos) {
-        ColoredLightningBoltEntity lightning = ModEntities.lightningBolt.create(level);
+        ColoredLightningBoltEntity lightning = ModEntities.lightningBolt.create(level, EntitySpawnReason.EVENT);
         //noinspection ConstantConditions
         lightning.setVisualOnly(true);
-        lightning.moveTo(pos);
+        lightning.snapTo(pos);
         lightning.setColor(Util.LIGHTNING_COLOR);
         level.addFreshEntity(lightning);
     }

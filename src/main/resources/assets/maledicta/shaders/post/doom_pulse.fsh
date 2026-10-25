@@ -1,11 +1,14 @@
-#version 150
+#version 330
 
-uniform sampler2D DiffuseSampler;
+uniform sampler2D InSampler;
 
 in vec2 texCoord;
 
-uniform float Pulse;    // 0 between the beats, 1 on a full beat
-uniform float Progress; // 0 at the start of the countdown, 1 at the end
+// written every frame by DoomShader
+layout(std140) uniform DoomConfig {
+    float Pulse;    // 0 between the beats, 1 on a full beat
+    float Progress; // 0 at the start of the countdown, 1 at the end
+};
 
 out vec4 fragColor;
 
@@ -21,9 +24,9 @@ void main() {
     float aberration = Progress * 0.1;
     vec2 offset = centered * (aberration * Pulse);
     vec3 color = vec3(
-        texture(DiffuseSampler, uv + offset).r,
-        texture(DiffuseSampler, uv).g,
-        texture(DiffuseSampler, uv - offset).b
+        texture(InSampler, uv + offset).r,
+        texture(InSampler, uv).g,
+        texture(InSampler, uv - offset).b
     );
 
     // the colour drains out of the world while the countdown runs

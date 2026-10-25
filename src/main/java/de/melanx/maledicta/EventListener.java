@@ -95,7 +95,7 @@ public class EventListener {
             return;
         }
 
-        Holder<Enchantment> curse = player.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(EnchantmentProvider.STRIFE);
+        Holder<Enchantment> curse = player.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(EnchantmentProvider.STRIFE);
         int strifePieces = 0;
         for (ItemStack stack : EventListener.visibleItems(player)) {
             if (stack.getEnchantmentLevel(curse) > 0) {
@@ -113,7 +113,7 @@ public class EventListener {
         for (Mob mob : mobs) {
             mob.setTarget(player);
             if (mob instanceof NeutralMob neutral) {
-                neutral.setPersistentAngerTarget(player.getUUID());
+                neutral.setPersistentAngerTarget(EntityReference.of(player.getUUID()));
                 neutral.startPersistentAngerTimer();
             }
         }
@@ -167,10 +167,10 @@ public class EventListener {
                 if (energyCollector.negativeEnergy().test()) {
                     if (Util.tryToApplyCurse(player, stack)) {
                         // summon custom lightning
-                        ColoredLightningBoltEntity entity = ModEntities.lightningBolt.create(player.level());
+                        ColoredLightningBoltEntity entity = ModEntities.lightningBolt.create(player.level(), EntitySpawnReason.EVENT);
                         //noinspection ConstantConditions
                         entity.setColor(0xFF0000);
-                        entity.moveTo(player.position());
+                        entity.snapTo(player.position());
                         entity.setVisualOnly(true);
                         player.level().addFreshEntity(entity);
                     }
@@ -185,7 +185,7 @@ public class EventListener {
             return;
         }
 
-        if (event.getLevel().isClientSide) {
+        if (event.getLevel().isClientSide()) {
             return;
         }
 
@@ -215,10 +215,10 @@ public class EventListener {
     @SubscribeEvent
     public static void onDealDamage(LivingIncomingDamageEvent event) {
         if (event.getSource().getEntity() instanceof LivingEntity causer) {
-            RandomSource random = causer.level().random;
+            RandomSource random = causer.level().getRandom();
             LivingEntity victim = event.getEntity();
 
-            if (ModConfig.NegativeEnergy.enabled && victim.getType().is(EntityTypeTags.UNDEAD)) {
+            if (ModConfig.NegativeEnergy.enabled && victim.is(EntityTypeTags.UNDEAD)) {
                 ItemStack mainHandItem = causer.getMainHandItem();
                 if (Util.isEnchantable(mainHandItem)) {
                     mainHandItem.update(ModDataComponentTypes.energyCollector, EnergyCollector.EMPTY, energyCollector -> {
@@ -228,14 +228,14 @@ public class EventListener {
                 }
             }
 
-            Registry<Enchantment> enchantments = victim.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-            Optional<Holder.Reference<Enchantment>> karma = enchantments.getHolder(EnchantmentProvider.KARMA);
-            Optional<Holder.Reference<Enchantment>> kindness = enchantments.getHolder(EnchantmentProvider.KINDNESS);
+            Registry<Enchantment> enchantments = victim.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+            Optional<Holder.Reference<Enchantment>> karma = enchantments.get(EnchantmentProvider.KARMA);
+            Optional<Holder.Reference<Enchantment>> kindness = enchantments.get(EnchantmentProvider.KINDNESS);
 
             karma.ifPresent(key -> {
                 boolean receiveKarma = Util.hasEnchantmentInHand(causer, karma.get());
                 if (receiveKarma && causer.getRandom().nextDouble() <= ModConfig.karmaChance) {
-                    causer.hurt(new DamageSource(causer.level().registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DamageTypeProvider.KARMA)), event.getAmount());
+                    causer.hurt(new DamageSource(causer.level().registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(DamageTypeProvider.KARMA)), event.getAmount());
                 }
             });
 
@@ -252,14 +252,14 @@ public class EventListener {
 
     @SubscribeEvent
     public static void onBlockDrops(BlockDropsEvent event) {
-        Holder.Reference<Enchantment> fleetingRiches = event.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(EnchantmentProvider.FLEETING_RICHES);
+        Holder.Reference<Enchantment> fleetingRiches = event.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(EnchantmentProvider.FLEETING_RICHES);
         if (event.getTool().getEnchantmentLevel(fleetingRiches) <= 0) {
             return;
         }
 
         double chance = 0.2;
         for (ItemEntity drop : event.getDrops()) {
-            if (event.getLevel().random.nextDouble() <= chance) {
+            if (event.getLevel().getRandom().nextDouble() <= chance) {
                 drop.setNeverPickUp();
                 drop.lifespan = 30;
             }
@@ -279,11 +279,11 @@ public class EventListener {
         }
 
         event.setCanceled(true);
-        ColoredLightningBoltEntity coloredLightning = ModEntities.lightningBolt.create(event.getLevel());
+        ColoredLightningBoltEntity coloredLightning = ModEntities.lightningBolt.create(event.getLevel(), EntitySpawnReason.EVENT);
 
         Objects.requireNonNull(coloredLightning).setDamage(0);
         coloredLightning.setVisualOnly(ModConfig.safeLightnings);
-        coloredLightning.moveTo(lightning.position());
+        coloredLightning.snapTo(lightning.position());
         coloredLightning.setColor(Util.LIGHTNING_COLOR);
 
         event.getLevel().addFreshEntity(coloredLightning);
@@ -306,15 +306,25 @@ public class EventListener {
     }
 
     private static boolean hasCurseInHand(Player player, ResourceKey<Enchantment> curse) {
-        return EventListener.hasCurse(player, player.getHandSlots(), curse);
+        List<ItemStack> stacks = new ArrayList<>();
+        stacks.add(player.getMainHandItem());
+        stacks.add(player.getOffhandItem());
+
+        return EventListener.hasCurse(player, stacks, curse);
     }
 
     private static boolean hasCursedArmor(Player player, ResourceKey<Enchantment> cursed) {
-        return EventListener.hasCurse(player, player.getArmorSlots(), cursed);
+        List<ItemStack> stacks = new ArrayList<>();
+        stacks.add(player.getItemBySlot(EquipmentSlot.FEET));
+        stacks.add(player.getItemBySlot(EquipmentSlot.LEGS));
+        stacks.add(player.getItemBySlot(EquipmentSlot.CHEST));
+        stacks.add(player.getItemBySlot(EquipmentSlot.HEAD));
+
+        return EventListener.hasCurse(player, stacks, cursed);
     }
 
     private static boolean hasCurse(Player player, Iterable<ItemStack> stacks, ResourceKey<Enchantment> curse) {
-        Holder.Reference<Enchantment> holder = player.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(curse);
+        Holder.Reference<Enchantment> holder = player.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(curse);
         for (ItemStack stack : stacks) {
             if (stack.getEnchantmentLevel(holder) > 0) {
                 return true;
@@ -327,14 +337,13 @@ public class EventListener {
     private static void stopDoom(ServerPlayer player) {
         DOOMED_PLAYERS.remove(player.getUUID());
         ModNetwork.heartbeatEffect(player, false);
-        player.connection.send(new ClientboundStopSoundPacket(ModSoundEvents.heartbeat.getLocation(), SoundSource.PLAYERS));
+        player.connection.send(new ClientboundStopSoundPacket(ModSoundEvents.heartbeat.location(), SoundSource.PLAYERS));
     }
 
     private static List<ItemStack> getHandOrArmorItems(Player player) {
         List<ItemStack> items = new ArrayList<>();
-        items.add(player.getMainHandItem());
-        items.add(player.getOffhandItem());
-        items.addAll((Collection<? extends ItemStack>) player.getArmorSlots());
+        EventListener.visibleItems(player).forEach(items::add);
+
         return items.removeIf(ItemStack::isEmpty) ? items : Collections.emptyList();
     }
 }

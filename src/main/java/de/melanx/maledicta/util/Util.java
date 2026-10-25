@@ -39,8 +39,8 @@ public class Util {
     }
 
     public static boolean tryToApplyCurse(Player player, ItemStack stack) {
-        Registry<Enchantment> enchantments = player.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-        List<Holder.Reference<Enchantment>> possibleEnchantments = enchantments.holders().filter(enchantmentReference -> enchantmentReference.is(EnchantmentTags.CURSE) && stack.supportsEnchantment(enchantmentReference)).toList();
+        Registry<Enchantment> enchantments = player.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        List<Holder.Reference<Enchantment>> possibleEnchantments = enchantments.listElements().filter(enchantmentReference -> enchantmentReference.is(EnchantmentTags.CURSE) && stack.supportsEnchantment(enchantmentReference)).toList();
         if (possibleEnchantments.isEmpty()) {
             return false;
         }
@@ -59,7 +59,7 @@ public class Util {
         }
 
         if ((event.isForced() || stack.supportsEnchantment(enchantment)) && stack.getEnchantmentLevel(enchantment) <= 0) {
-            stack.enchant(enchantment, Objects.requireNonNull(enchantments.get(enchantment.getKey())).getMaxLevel());
+            stack.enchant(enchantment, enchantment.value().getMaxLevel());
             return true;
         }
 

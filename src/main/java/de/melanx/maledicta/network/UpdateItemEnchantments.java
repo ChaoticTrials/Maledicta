@@ -19,7 +19,7 @@ import javax.annotation.Nonnull;
 
 public class UpdateItemEnchantments extends PacketHandler<UpdateItemEnchantments.Message> {
 
-    public static final CustomPacketPayload.Type<Message> TYPE = new CustomPacketPayload.Type<>(Maledicta.getInstance().resource("update_item_enchantments"));
+    public static final CustomPacketPayload.Type<Message> TYPE = new CustomPacketPayload.Type<>(Maledicta.getInstance().id("update_item_enchantments"));
 
     public UpdateItemEnchantments() {
         super(TYPE, PacketFlow.CLIENTBOUND, Message.CODEC, HandlerThread.MAIN);

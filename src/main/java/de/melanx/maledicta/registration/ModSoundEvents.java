@@ -7,5 +7,5 @@ import org.moddingx.libx.annotation.registration.RegisterClass;
 @RegisterClass(registry = "SOUND_EVENT")
 public class ModSoundEvents {
 
-    public static final SoundEvent heartbeat = SoundEvent.createFixedRangeEvent(Maledicta.getInstance().resource("heartbeat"), 1);
+    public static final SoundEvent heartbeat = SoundEvent.createFixedRangeEvent(Maledicta.getInstance().id("heartbeat"), 1);
 }

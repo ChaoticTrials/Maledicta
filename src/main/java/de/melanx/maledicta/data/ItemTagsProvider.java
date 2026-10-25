@@ -10,7 +10,7 @@ import org.moddingx.libx.datagen.provider.tags.CommonTagsProviderBase;
 
 public class ItemTagsProvider extends CommonTagsProviderBase {
 
-    public static final TagKey<Item> ALL_WEAPONS = TagKey.create(Registries.ITEM, Maledicta.getInstance().resource("all_weapons"));
+    public static final TagKey<Item> ALL_WEAPONS = TagKey.create(Registries.ITEM, Maledicta.getInstance().id("all_weapons"));
 
     public ItemTagsProvider(DatagenContext ctx) {
         super(ctx);

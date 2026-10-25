@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
-      "tag": "c:ingots/netherite"
-    },
-    "O": {
-      "tag": "c:ingots/netherite"
-    }
+    "B": "#c:ingots/netherite",
+    "O": "#c:ingots/netherite"
   },
   "pattern": [
     "B",
@@ -15,7 +11,6 @@
     "O"
   ],
   "result": {
-    "count": 1,
     "id": "maledicta:maledictus_aufero"
   }
 }

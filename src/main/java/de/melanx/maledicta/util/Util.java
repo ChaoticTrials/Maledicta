@@ -10,6 +10,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -23,6 +24,9 @@ import java.util.*;
 public class Util {
 
     public static final int LIGHTNING_COLOR = 0x6905F5;
+    public static final EquipmentSlot[] WORN_OR_HELD = {
+            EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND, EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
+    };
 
     public static void unenchant(ItemStack stack, Holder<Enchantment> enchantment) {
         ItemEnchantments enchantments = stack.getTagEnchantments();

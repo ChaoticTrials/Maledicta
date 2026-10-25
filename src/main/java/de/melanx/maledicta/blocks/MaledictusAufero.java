@@ -5,6 +5,7 @@ import de.melanx.maledicta.api.MaledictusAuferoEvent;
 import de.melanx.maledicta.capabilities.EnergyCollector;
 import de.melanx.maledicta.lightning.ColoredLightningBoltEntity;
 import de.melanx.maledicta.network.ModNetwork;
+import de.melanx.maledicta.registration.ModBlockEntities;
 import de.melanx.maledicta.registration.ModDataComponentTypes;
 import de.melanx.maledicta.registration.ModEntities;
 import de.melanx.maledicta.util.Util;
@@ -13,6 +14,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -24,13 +26,16 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.LightningRodBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForge;
-import org.apache.commons.lang3.tuple.Pair;
 import org.moddingx.libx.mod.ModX;
 import org.moddingx.libx.registration.Registerable;
 import org.moddingx.libx.registration.RegistrationContext;
@@ -39,7 +44,7 @@ import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MaledictusAufero extends LightningRodBlock implements Registerable {
+public class MaledictusAufero extends LightningRodBlock implements Registerable, EntityBlock {
 
     protected final ModX mod;
     private final Item item;
@@ -49,6 +54,20 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
         this.mod = mod;
         //noinspection ConstantConditions
         this.item = new BlockItem(this, itemProperties.useBlockDescriptionPrefix());
+    }
+
+    @Override
+    public BlockEntity newBlockEntity(@Nonnull BlockPos pos, @Nonnull BlockState state) {
+        return new MaledictusAuferoBlockEntity(pos, state);
+    }
+
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@Nonnull Level level, @Nonnull BlockState state, @Nonnull BlockEntityType<T> type) {
+        if (level.isClientSide() || type != ModBlockEntities.maledictusAufero) {
+            return null;
+        }
+
+        return (tickLevel, pos, tickState, blockEntity) -> ((MaledictusAuferoBlockEntity) blockEntity).serverTick((ServerLevel) tickLevel, pos);
     }
 
     @Override
@@ -142,28 +161,20 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable 
             return;
         }
 
+        MaledictusAuferoBlockEntity rod = level instanceof ServerLevel && level.getBlockEntity(pos) instanceof MaledictusAuferoBlockEntity be ? be : null;
         Set<UUID> hasLightning = new HashSet<>();
-        Set<Pair<UUID, LeveledEnchantment>> collectedCurses = new HashSet<>();
-        cursedItems.forEach(item -> {
+        for (ItemEntity item : cursedItems) {
             LeveledEnchantment randomCurse = this.getRandomCurse(item.getItem(), level.getRandom(), enchantmentRegistryLookup);
-            if (randomCurse != null) {
-                collectedCurses.add(Pair.of(item.getUUID(), randomCurse));
-                Util.unenchant(item.getItem(), randomCurse.enchantment);
-                ModNetwork.updateItemEnchantments(item);
-
-                hasLightning.add(item.getUUID());
-                this.summonLightning(level, item.position());
+            if (randomCurse == null || rod == null || !rod.store((ServerLevel) level, randomCurse.enchantment, randomCurse.level)) {
+                continue;
             }
-        });
 
-        collectedCurses.forEach(curse -> {
-            ItemEntity randomItem = items.get(level.getRandom().nextInt(items.size()));
-            if (randomItem.getUUID() != curse.getLeft() && randomItem.getItem().supportsEnchantment(curse.getValue().enchantment) && randomItem.getItem().getEnchantmentLevel(curse.getValue().enchantment) < 1) {
-                randomItem.getItem().enchant(curse.getValue().enchantment, curse.getValue().level);
-                ModNetwork.updateItemEnchantments(randomItem);
-            }
-            items.remove(randomItem);
-        });
+            Util.unenchant(item.getItem(), randomCurse.enchantment);
+            ModNetwork.updateItemEnchantments(item);
+
+            hasLightning.add(item.getUUID());
+            this.summonLightning(level, item.position());
+        }
 
         this.handleNegativeEnergy(level, hasLightning, items);
     }

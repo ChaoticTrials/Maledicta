@@ -43,15 +43,16 @@ public class MaledictusAuferoEvent extends Event implements ICancellableEvent {
     }
 
     /**
-     * Gets all items in range of the maledictus aufero. These will get their negative energy halved
-     * and may be enchanted with curses from other items if applicable.
+     * Gets all items in range of the maledictus aufero. These will get their negative energy halved.
+     * With {@code onlyTransferCurses} they may also be enchanted with curses from other items if applicable.
      */
     public List<ItemEntity> getAllItems() {
         return this.allItems;
     }
 
     /**
-     * Gets all the cursed items. These will get a curse removed (that may be put onto a different item if applicable).
+     * Gets all the cursed items. These will get a curse removed. The curse is stored in the maledictus aufero, unless
+     * it is full, then the item keeps it. With {@code onlyTransferCurses} the curse is put onto a different item instead.
      */
     public List<ItemEntity> getCursedItems() {
         return this.cursedItems;

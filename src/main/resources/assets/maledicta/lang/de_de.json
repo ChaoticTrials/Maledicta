@@ -3,6 +3,7 @@
 
   "death.attack.maledicta_karma.message": "%1$s spürte Karma für das Verletzen anderer",
   "death.attack.maledicta_doomed.message": "%1$s ist untergegangen",
+  "death.attack.maledicta_aufero.message": "%1$s wurde von entfesselten Flüchen zerrissen",
 
   "enchantment.maledicta.curse_of_karma": "Fluch des Karma",
   "enchantment.maledicta.curse_of_karma.desc": "Der Angreifer wird den gleichen Schaden erleiden wie das Opfer.",
@@ -16,6 +17,8 @@
   "enchantment.maledicta.curse_of_doom.desc": "Der Spieler stirbt kurz nachdem er zu wenig Gesundheit hat.",
   "enchantment.maledicta.curse_of_strife": "Fluch des Unmutes",
   "enchantment.maledicta.curse_of_strife.desc": "Hin und wieder wenden sich einige Wesen gegen dich.",
+
+  "entity.maledicta.lightning_arc": "Lichtbogen",
 
   "subtitle.maledicta.heartbeat": "Herzschlag"
 }

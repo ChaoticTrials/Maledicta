@@ -4,7 +4,7 @@
   "refmap": "maledicta.refmap.json",
   "package": "de.melanx.maledicta.mixin",
   "minVersion": "0.8",
-  "client": [ ],
+  "client": [ "ClientLevelMixin" ],
   "server": [ ],
   "mixins": [ "ItemStackMixin", "ServerLevelMixin" ]
 }

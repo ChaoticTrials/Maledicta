@@ -13,11 +13,12 @@ public class ModNetwork extends NetworkX {
 
         this.register(new UpdateItemEnchantments());
         this.register(new HeartbeatEffect());
+        this.register(new DarkSkyEffect());
     }
 
     @Override
     protected String getVersion() {
-        return "3";
+        return "4";
     }
 
     public static void updateItemEnchantments(ItemEntity item) {
@@ -26,5 +27,9 @@ public class ModNetwork extends NetworkX {
 
     public static void heartbeatEffect(ServerPlayer player, boolean active) {
         PacketDistributor.sendToPlayer(player, new HeartbeatEffect.Message(active));
+    }
+
+    public static void darkSky(ServerPlayer player, int ticks) {
+        PacketDistributor.sendToPlayer(player, new DarkSkyEffect.Message(ticks));
     }
 }

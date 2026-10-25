@@ -3,6 +3,7 @@
 
   "death.attack.maledicta_karma.message": "%1$s experienced karma for harming others",
   "death.attack.maledicta_doomed.message": "%1$s was doomed",
+  "death.attack.maledicta_aufero.message": "%1$s was torn apart by released curses",
 
   "enchantment.maledicta.curse_of_karma": "Curse of Karma",
   "enchantment.maledicta.curse_of_karma.desc": "The attacker will receive the same amount of damage as the victim.",
@@ -16,6 +17,8 @@
   "enchantment.maledicta.curse_of_doom.desc": "The player dies shortly after having too less health.",
   "enchantment.maledicta.curse_of_strife": "Curse of Strife",
   "enchantment.maledicta.curse_of_strife.desc": "Every now and then, nearby mobs turn against you.",
+
+  "entity.maledicta.lightning_arc": "Lightning Arc",
 
   "subtitle.maledicta.heartbeat": "Heartbeat"
 }

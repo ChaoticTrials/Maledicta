@@ -17,10 +17,10 @@ void main() {
     float dist = length(centered);
 
     float squeeze = Progress * 0.8 - 0.2;
-    // on a beat the picture is squeezed towards the centre, the most at the edges
+    // on a beat the picture is squeezed toward the center, the most at the edges
     vec2 uv = 0.5 + centered * (1.0 - squeeze * Pulse * smoothstep(0.1, 0.7, dist));
 
-    // the colour channels drift apart radially
+    // the color channels drift apart radially
     float aberration = Progress * 0.1;
     vec2 offset = centered * (aberration * Pulse);
     vec3 color = vec3(
@@ -29,7 +29,7 @@ void main() {
         texture(InSampler, uv - offset).b
     );
 
-    // the colour drains out of the world while the countdown runs
+    // the color drains out of the world while the countdown runs
     float luma = dot(color, vec3(0.299, 0.587, 0.114));
     color = mix(color, vec3(luma), 0.95 * Progress);
 

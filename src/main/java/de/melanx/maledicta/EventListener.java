@@ -5,6 +5,7 @@ import de.melanx.maledicta.data.DamageTypeProvider;
 import de.melanx.maledicta.data.EnchantmentProvider;
 import de.melanx.maledicta.lightning.ColoredLightningBoltEntity;
 import de.melanx.maledicta.lightning.ColoredLightningBoltRenderer;
+import de.melanx.maledicta.lightning.LightningArcRenderer;
 import de.melanx.maledicta.network.ModNetwork;
 import de.melanx.maledicta.registration.ModBlocks;
 import de.melanx.maledicta.registration.ModDataComponentTypes;
@@ -58,6 +59,7 @@ public class EventListener {
     @SubscribeEvent
     public static void registerEntityRenderer(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.lightningBolt, ColoredLightningBoltRenderer::new);
+        event.registerEntityRenderer(ModEntities.lightningArc, LightningArcRenderer::new);
     }
 
     @SubscribeEvent
@@ -291,12 +293,9 @@ public class EventListener {
 
     private static Iterable<ItemStack> visibleItems(Player player) {
         List<ItemStack> stacks = new ArrayList<>();
-        stacks.add(player.getMainHandItem());
-        stacks.add(player.getOffhandItem());
-        stacks.add(player.getItemBySlot(EquipmentSlot.FEET));
-        stacks.add(player.getItemBySlot(EquipmentSlot.LEGS));
-        stacks.add(player.getItemBySlot(EquipmentSlot.CHEST));
-        stacks.add(player.getItemBySlot(EquipmentSlot.HEAD));
+        for (EquipmentSlot equipmentSlot : Util.WORN_OR_HELD) {
+            stacks.add(player.getItemBySlot(equipmentSlot));
+        }
 
         return stacks;
     }

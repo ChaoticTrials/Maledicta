@@ -17,6 +17,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.game.ClientboundStopSoundPacket;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,10 +25,9 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LightningBolt;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -70,7 +70,7 @@ public class EventListener {
         long gameTime = player.level().getGameTime();
         Long deadline = DOOMED_PLAYERS.get(playerId);
 
-        if (player.isAlive() && player.getHealth() <= DOOM_HEALTH && EventListener.hasCurseOfDoom(player)) {
+        if (player.isAlive() && player.getHealth() <= DOOM_HEALTH && EventListener.hasCursedArmor(player, EnchantmentProvider.DOOM)) {
             if (deadline == null) {
                 DOOMED_PLAYERS.put(playerId, gameTime + DOOM_COUNTDOWN);
                 player.level().playSound(null, player, ModSoundEvents.heartbeat, SoundSource.PLAYERS, 1, 1);
@@ -82,6 +82,40 @@ public class EventListener {
             }
         } else if (deadline != null) {
             EventListener.stopDoom(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onStrifeTick(PlayerTickEvent.Pre event) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || player.isSpectator() || player.isCreative() || player.getRandom().nextDouble() >= ModConfig.Strife.chance) {
+            return;
+        }
+
+        if (!EventListener.hasCurseVisible(player, EnchantmentProvider.STRIFE)) {
+            return;
+        }
+
+        Holder<Enchantment> curse = player.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(EnchantmentProvider.STRIFE);
+        int strifePieces = 0;
+        for (ItemStack stack : EventListener.visibleItems(player)) {
+            if (stack.getEnchantmentLevel(curse) > 0) {
+                strifePieces++;
+            }
+        }
+
+        int radius = ModConfig.Strife.radius + (strifePieces - 1) * 2;
+        List<Mob> mobs = player.level().getEntitiesOfClass(
+                Mob.class,
+                player.getBoundingBox().inflate(radius),
+                mob -> mob instanceof Enemy && mob.getTarget() == null && mob.canAttack(player) && (!ModConfig.Strife.requireLineOfSight || mob.getSensing().hasLineOfSight(player))
+        );
+
+        for (Mob mob : mobs) {
+            mob.setTarget(player);
+            if (mob instanceof NeutralMob neutral) {
+                neutral.setPersistentAngerTarget(player.getUUID());
+                neutral.startPersistentAngerTimer();
+            }
         }
     }
 
@@ -255,10 +289,34 @@ public class EventListener {
         event.getLevel().addFreshEntity(coloredLightning);
     }
 
-    private static boolean hasCurseOfDoom(Player player) {
-        Holder.Reference<Enchantment> doom = player.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(EnchantmentProvider.DOOM);
-        for (ItemStack stack : player.getArmorSlots()) {
-            if (stack.getEnchantmentLevel(doom) > 0) {
+    private static Iterable<ItemStack> visibleItems(Player player) {
+        List<ItemStack> stacks = new ArrayList<>();
+        stacks.add(player.getMainHandItem());
+        stacks.add(player.getOffhandItem());
+        stacks.add(player.getItemBySlot(EquipmentSlot.FEET));
+        stacks.add(player.getItemBySlot(EquipmentSlot.LEGS));
+        stacks.add(player.getItemBySlot(EquipmentSlot.CHEST));
+        stacks.add(player.getItemBySlot(EquipmentSlot.HEAD));
+
+        return stacks;
+    }
+
+    private static boolean hasCurseVisible(Player player, ResourceKey<Enchantment> curse) {
+        return EventListener.hasCurse(player, EventListener.visibleItems(player), curse);
+    }
+
+    private static boolean hasCurseInHand(Player player, ResourceKey<Enchantment> curse) {
+        return EventListener.hasCurse(player, player.getHandSlots(), curse);
+    }
+
+    private static boolean hasCursedArmor(Player player, ResourceKey<Enchantment> cursed) {
+        return EventListener.hasCurse(player, player.getArmorSlots(), cursed);
+    }
+
+    private static boolean hasCurse(Player player, Iterable<ItemStack> stacks, ResourceKey<Enchantment> curse) {
+        Holder.Reference<Enchantment> holder = player.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(curse);
+        for (ItemStack stack : stacks) {
+            if (stack.getEnchantmentLevel(holder) > 0) {
                 return true;
             }
         }

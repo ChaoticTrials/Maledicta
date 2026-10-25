@@ -22,7 +22,8 @@ public class EnchantmentTagsProvider extends TagProviderBase<Enchantment> {
                 EnchantmentProvider.KINDNESS,
                 EnchantmentProvider.RANDOMNESS,
                 EnchantmentProvider.FLEETING_RICHES,
-                EnchantmentProvider.DOOM
+                EnchantmentProvider.DOOM,
+                EnchantmentProvider.STRIFE
         );
 
         this.tag(EnchantmentTags.TREASURE).addAll(enchantmentKeys);

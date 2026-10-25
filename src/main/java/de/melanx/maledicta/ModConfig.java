@@ -33,6 +33,22 @@ public class ModConfig {
     public static boolean onlyTransferCurses = false;
 
     @Group
+    public static class Strife {
+
+        @Config({"The chance per tick that the Curse of Strife turns nearby monsters against its wearer"})
+        @DoubleRange(min = 0, max = 1)
+        public static double chance = 1.0 / 1337;
+
+        @Config("The distance in blocks in which monsters are turned against the wearer")
+        @IntRange(min = 1, max = 64)
+        public static int radius = 16;
+
+        @Config({"If set to true, only monsters which can see the wearer are turned against them",
+                "Otherwise they will come for the wearer even through walls, as long as they find a way"})
+        public static boolean requireLineOfSight = false;
+    }
+
+    @Group
     public static class NegativeEnergy {
 
         @Config("Should negative energy even be enabled")

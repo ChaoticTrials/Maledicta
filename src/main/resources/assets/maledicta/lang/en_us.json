@@ -14,6 +14,8 @@
   "enchantment.maledicta.curse_of_fleeting_riches.desc": "A portion of drops become untouchable and disappear shortly.",
   "enchantment.maledicta.curse_of_doom": "Curse of Doom",
   "enchantment.maledicta.curse_of_doom.desc": "The player dies shortly after having too less health.",
+  "enchantment.maledicta.curse_of_strife": "Curse of Strife",
+  "enchantment.maledicta.curse_of_strife.desc": "Every now and then, nearby mobs turn against you.",
 
   "subtitle.maledicta.heartbeat": "Heartbeat"
 }

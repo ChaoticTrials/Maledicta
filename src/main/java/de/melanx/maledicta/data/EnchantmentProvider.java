@@ -18,6 +18,7 @@ public class EnchantmentProvider extends EnchantmentProviderBase {
     public static final ResourceKey<Enchantment> RANDOMNESS = EnchantmentProvider.curseKey("randomness");
     public static final ResourceKey<Enchantment> FLEETING_RICHES = EnchantmentProvider.curseKey("fleeting_riches");
     public static final ResourceKey<Enchantment> DOOM = EnchantmentProvider.curseKey("doom");
+    public static final ResourceKey<Enchantment> STRIFE = EnchantmentProvider.curseKey("strife");
 
     public final Holder<Enchantment> curseOfKarma = this.enchantment(Component.translatable("enchantment.maledicta.curse_of_karma"))
             .supportedItems(ItemTagsProvider.ALL_WEAPONS)
@@ -46,6 +47,13 @@ public class EnchantmentProvider extends EnchantmentProviderBase {
     public final Holder<Enchantment> curseOfDoom = this.enchantment(Component.translatable("enchantment.maledicta.curse_of_doom"))
             .supportedItems(ItemTags.ARMOR_ENCHANTABLE)
             .slot(EquipmentSlotGroup.ARMOR)
+            .minCost(25, 0)
+            .maxCost(50, 0)
+            .build();
+    public final Holder<Enchantment> curseOfStrife = this.enchantment(Component.translatable("enchantment.maledicta.curse_of_strife"))
+            .supportedItems(ItemTags.DURABILITY_ENCHANTABLE)
+            .slot(EquipmentSlotGroup.ARMOR)
+            .slot(EquipmentSlotGroup.HAND)
             .minCost(25, 0)
             .maxCost(50, 0)
             .build();

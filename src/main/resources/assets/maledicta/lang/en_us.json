@@ -2,6 +2,7 @@
   "block.maledicta.maledictus_aufero": "Maledictus Aufero",
 
   "death.attack.maledicta_karma.message": "%1$s experienced karma for harming others",
+  "death.attack.maledicta_doomed.message": "%1$s was doomed",
 
   "enchantment.maledicta.curse_of_karma": "Curse of Karma",
   "enchantment.maledicta.curse_of_karma.desc": "The attacker will receive the same amount of damage as the victim.",
@@ -10,5 +11,9 @@
   "enchantment.maledicta.curse_of_randomness": "Curse of Randomness",
   "enchantment.maledicta.curse_of_randomness.desc": "Each time the item loses durability, its enchantments will be shuffled, except for curses.",
   "enchantment.maledicta.curse_of_fleeting_riches": "Curse of Fleeting Riches",
-  "enchantment.maledicta.curse_of_fleeting_riches.desc": "A portion of drops become untouchable and disappear shortly."
+  "enchantment.maledicta.curse_of_fleeting_riches.desc": "A portion of drops become untouchable and disappear shortly.",
+  "enchantment.maledicta.curse_of_doom": "Curse of Doom",
+  "enchantment.maledicta.curse_of_doom.desc": "The player dies shortly after having too less health.",
+
+  "subtitle.maledicta.heartbeat": "Heartbeat"
 }

@@ -1,0 +1,8 @@
+{
+  "heartbeat": {
+    "sounds": [
+      "maledicta:heartbeat"
+    ],
+    "subtitle": "subtitle.maledicta.heartbeat"
+  }
+}

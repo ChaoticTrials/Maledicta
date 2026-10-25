@@ -12,8 +12,12 @@ import org.moddingx.libx.datagen.provider.DamageTypeProviderBase;
 public class DamageTypeProvider extends DamageTypeProviderBase {
 
     public static final ResourceKey<DamageType> KARMA = ResourceKey.create(Registries.DAMAGE_TYPE, Maledicta.getInstance().resource("maledicta_karma"));
+    public static final ResourceKey<DamageType> DOOMED = ResourceKey.create(Registries.DAMAGE_TYPE, Maledicta.getInstance().resource("maledicta_doomed"));
 
     public final Holder<DamageType> maledictaKarma = this.damageType("maledicta_karma", 0.0f)
+            .deathMessageType(DeathMessageType.INTENTIONAL_GAME_DESIGN)
+            .build();
+    public final Holder<DamageType> maledictaDoomed = this.damageType("maledicta_doomed", 0.0f)
             .deathMessageType(DeathMessageType.INTENTIONAL_GAME_DESIGN)
             .build();
 

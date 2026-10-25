@@ -5,18 +5,22 @@ import de.melanx.maledicta.data.DamageTypeProvider;
 import de.melanx.maledicta.data.EnchantmentProvider;
 import de.melanx.maledicta.lightning.ColoredLightningBoltEntity;
 import de.melanx.maledicta.lightning.ColoredLightningBoltRenderer;
+import de.melanx.maledicta.network.ModNetwork;
 import de.melanx.maledicta.registration.ModBlocks;
 import de.melanx.maledicta.registration.ModDataComponentTypes;
 import de.melanx.maledicta.registration.ModEntities;
+import de.melanx.maledicta.registration.ModSoundEvents;
 import de.melanx.maledicta.util.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.protocol.game.ClientboundStopSoundPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
@@ -32,9 +36,12 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.BlockDropsEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.*;
@@ -42,11 +49,52 @@ import java.util.*;
 @EventBusSubscriber(modid = "maledicta")
 public class EventListener {
 
+    private static final int DOOM_HEALTH = 10;
+    private static final int DOOM_COUNTDOWN = 200;
+
     private static long nextTime = 0L;
+    public static final Map<UUID, Long> DOOMED_PLAYERS = new HashMap<>();
 
     @SubscribeEvent
     public static void registerEntityRenderer(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.lightningBolt, ColoredLightningBoltRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void onEntityTick(PlayerTickEvent.Pre event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+
+        UUID playerId = player.getUUID();
+        long gameTime = player.level().getGameTime();
+        Long deadline = DOOMED_PLAYERS.get(playerId);
+
+        if (player.isAlive() && player.getHealth() <= DOOM_HEALTH && EventListener.hasCurseOfDoom(player)) {
+            if (deadline == null) {
+                DOOMED_PLAYERS.put(playerId, gameTime + DOOM_COUNTDOWN);
+                player.level().playSound(null, player, ModSoundEvents.heartbeat, SoundSource.PLAYERS, 1, 1);
+                ModNetwork.heartbeatEffect(player, true);
+            } else if (deadline <= gameTime) {
+                DOOMED_PLAYERS.remove(playerId);
+                ModNetwork.heartbeatEffect(player, false);
+                player.hurt(player.damageSources().source(DamageTypeProvider.DOOMED), player.getMaxHealth());
+            }
+        } else if (deadline != null) {
+            EventListener.stopDoom(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerDeath(LivingDeathEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player && DOOMED_PLAYERS.containsKey(player.getUUID())) {
+            EventListener.stopDoom(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        DOOMED_PLAYERS.remove(event.getEntity().getUUID());
     }
 
     @SubscribeEvent
@@ -205,6 +253,23 @@ public class EventListener {
         coloredLightning.setColor(Util.LIGHTNING_COLOR);
 
         event.getLevel().addFreshEntity(coloredLightning);
+    }
+
+    private static boolean hasCurseOfDoom(Player player) {
+        Holder.Reference<Enchantment> doom = player.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(EnchantmentProvider.DOOM);
+        for (ItemStack stack : player.getArmorSlots()) {
+            if (stack.getEnchantmentLevel(doom) > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void stopDoom(ServerPlayer player) {
+        DOOMED_PLAYERS.remove(player.getUUID());
+        ModNetwork.heartbeatEffect(player, false);
+        player.connection.send(new ClientboundStopSoundPacket(ModSoundEvents.heartbeat.getLocation(), SoundSource.PLAYERS));
     }
 
     private static List<ItemStack> getHandOrArmorItems(Player player) {

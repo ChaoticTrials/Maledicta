@@ -13,10 +13,11 @@ import org.moddingx.libx.datagen.provider.EnchantmentProviderBase;
 
 public class EnchantmentProvider extends EnchantmentProviderBase {
 
-    public static final ResourceKey<Enchantment> KARMA = ResourceKey.create(Registries.ENCHANTMENT, Maledicta.getInstance().resource("curse_of_karma"));
-    public static final ResourceKey<Enchantment> KINDNESS = ResourceKey.create(Registries.ENCHANTMENT, Maledicta.getInstance().resource("curse_of_kindness"));
-    public static final ResourceKey<Enchantment> RANDOMNESS = ResourceKey.create(Registries.ENCHANTMENT, Maledicta.getInstance().resource("curse_of_randomness"));
-    public static final ResourceKey<Enchantment> FLEETING_RICHES = ResourceKey.create(Registries.ENCHANTMENT, Maledicta.getInstance().resource("curse_of_fleeting_riches"));
+    public static final ResourceKey<Enchantment> KARMA = EnchantmentProvider.curseKey("karma");
+    public static final ResourceKey<Enchantment> KINDNESS = EnchantmentProvider.curseKey("kindness");
+    public static final ResourceKey<Enchantment> RANDOMNESS = EnchantmentProvider.curseKey("randomness");
+    public static final ResourceKey<Enchantment> FLEETING_RICHES = EnchantmentProvider.curseKey("fleeting_riches");
+    public static final ResourceKey<Enchantment> DOOM = EnchantmentProvider.curseKey("doom");
 
     public final Holder<Enchantment> curseOfKarma = this.enchantment(Component.translatable("enchantment.maledicta.curse_of_karma"))
             .supportedItems(ItemTagsProvider.ALL_WEAPONS)
@@ -42,8 +43,22 @@ public class EnchantmentProvider extends EnchantmentProviderBase {
             .minCost(25, 0)
             .maxCost(50, 0)
             .build();
+    public final Holder<Enchantment> curseOfDoom = this.enchantment(Component.translatable("enchantment.maledicta.curse_of_doom"))
+            .supportedItems(ItemTags.ARMOR_ENCHANTABLE)
+            .slot(EquipmentSlotGroup.ARMOR)
+            .minCost(25, 0)
+            .maxCost(50, 0)
+            .build();
 
     public EnchantmentProvider(DatagenContext ctx) {
         super(ctx);
+    }
+
+    private static ResourceKey<Enchantment> curseKey(String name) {
+        return EnchantmentProvider.key("curse_of_" + name);
+    }
+
+    public static ResourceKey<Enchantment> key(String name) {
+        return ResourceKey.create(Registries.ENCHANTMENT, Maledicta.getInstance().resource(name));
     }
 }

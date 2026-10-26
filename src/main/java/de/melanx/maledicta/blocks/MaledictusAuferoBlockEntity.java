@@ -2,16 +2,23 @@ package de.melanx.maledicta.blocks;
 
 import com.mojang.serialization.Codec;
 import de.melanx.maledicta.ModConfig;
+import de.melanx.maledicta.client.ClientArcs;
 import de.melanx.maledicta.registration.ModBlockEntities;
 import de.melanx.maledicta.util.AuferoEffects;
 import de.melanx.maledicta.util.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
@@ -35,6 +42,7 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
     private float decayProgress;
     private boolean canDecay = true;
     private float jumpProgress;
+    private boolean cursed;
 
     public MaledictusAuferoBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.maledictusAufero, pos, state);
@@ -51,6 +59,7 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
 
         this.curses.add(new StoredCurse(curse, curseLevel));
         this.setChanged();
+        this.syncCursed();
 
         return true;
     }
@@ -74,17 +83,6 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
             return;
         }
 
-        int radius = 4;
-        BlockPos start = pos.offset(-radius, -radius, -radius);
-        Vec3 rodHead = Vec3.upFromBottomCenterOf(pos, 1);
-
-        for (int i = 0; i < 4; i++) {
-            BlockPos randomPos = new BlockPos(start.getX() + level.getRandom().nextInt(radius * 2), pos.getY() + level.getRandom().nextInt(radius), start.getZ() + level.getRandom().nextInt(radius * 2));
-            if (MaledictusAuferoBlockEntity.canSee(level, rodHead, Vec3.atCenterOf(randomPos))) {
-                AuferoEffects.arc(level, rodHead, Vec3.atCenterOf(randomPos), Util.LIGHTNING_COLOR, false);
-            }
-        }
-
         // bad energy makes jumps and decay happen more often, so the progress is measured in fractions of the interval
         double bad = this.badEnergy(level);
         this.jumpProgress += (float) ((1 + bad * ModConfig.MaledictusAufero.Jump.boost) / ModConfig.MaledictusAufero.Jump.interval);
@@ -106,11 +104,28 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
             this.decayProgress = 0;
             this.decayStep(level, pos);
             this.setChanged();
+            this.syncCursed();
+        }
+    }
+
+    public void clientTick(Level level, BlockPos pos) {
+        Vec3 rodHead = Vec3.upFromBottomCenterOf(pos, 1);
+        if (!this.cursed || !ClientArcs.isNear(rodHead)) {
+            return;
+        }
+
+        int radius = 4;
+        BlockPos start = pos.offset(-radius, -radius, -radius);
+        for (int i = 0; i < 4; i++) {
+            BlockPos randomPos = new BlockPos(start.getX() + level.getRandom().nextInt(radius * 2), pos.getY() + level.getRandom().nextInt(radius), start.getZ() + level.getRandom().nextInt(radius * 2));
+            if (MaledictusAuferoBlockEntity.canSee(level, rodHead, Vec3.atCenterOf(randomPos))) {
+                ClientArcs.spawn(level, rodHead, Vec3.atCenterOf(randomPos), Util.LIGHTNING_COLOR);
+            }
         }
     }
 
     // Whether no block is in the way between the two. The target itself may be solid, the arc then ends on its surface
-    private static boolean canSee(ServerLevel level, Vec3 from, Vec3 to) {
+    private static boolean canSee(Level level, Vec3 from, Vec3 to) {
         Vec3 offset = to.subtract(from);
         if (offset.length() < 1) {
             return false;
@@ -139,6 +154,7 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
         if (this.tryJump(level, pos, player, this.curses.get(index), ModConfig.MaledictusAufero.Jump.chance)) {
             this.curses.remove(index);
             this.setChanged();
+            this.syncCursed();
         }
     }
 
@@ -170,6 +186,16 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
         double chance = baseChance * (1 - distance / ModConfig.MaledictusAufero.Jump.range);
 
         return level.getRandom().nextDouble() < chance && AuferoEffects.jump(level, pos, player, curse, Util.LIGHTNING_COLOR);
+    }
+
+    private void syncCursed() {
+        boolean hasCurses = !this.curses.isEmpty();
+        if (this.cursed != hasCurses) {
+            this.cursed = hasCurses;
+            if (this.level != null) {
+                this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Block.UPDATE_CLIENTS);
+            }
+        }
     }
 
     private double badEnergy(Level level) {
@@ -205,6 +231,20 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
         }
     }
 
+    @Nonnull
+    @Override
+    public CompoundTag getUpdateTag(@Nonnull HolderLookup.Provider registries) {
+        CompoundTag tag = new CompoundTag();
+        tag.putBoolean("has_curses", this.cursed);
+
+        return tag;
+    }
+
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
     @Override
     protected void saveAdditional(@Nonnull ValueOutput output) {
         super.saveAdditional(output);
@@ -222,5 +262,8 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
         input.read("curses", CURSES_CODEC).ifPresent(this.curses::addAll);
         this.decayProgress = input.getFloatOr("decay_progress", 0F);
         this.canDecay = input.getBooleanOr("can_decay", true);
+
+        // client only, not saved
+        this.cursed = input.getBooleanOr("has_curses", !this.curses.isEmpty());
     }
 }

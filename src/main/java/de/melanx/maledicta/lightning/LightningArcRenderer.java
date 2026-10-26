@@ -8,7 +8,6 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4fc;
 
@@ -36,7 +35,7 @@ public class LightningArcRenderer extends EntityRenderer<LightningArcEntity, Lig
         super.extractRenderState(entity, state, partialTicks);
         state.offset = entity.getOffset();
         state.color = entity.getColor();
-        state.seed = entity.getSeed();
+        state.geometry = state.offset.lengthSqr() < 0.01 * 0.01 ? null : entity.getGeometry();
     }
 
     @Override
@@ -46,18 +45,12 @@ public class LightningArcRenderer extends EntityRenderer<LightningArcEntity, Lig
 
     @Override
     public void submit(@Nonnull LightningArcRenderState state, @Nonnull PoseStack poseStack, @Nonnull SubmitNodeCollector submitNodeCollector, @Nonnull CameraRenderState camera) {
-        double length = state.offset.length();
-        if (length < 0.01) {
+        LightningArcGeometry geometry = state.geometry;
+        if (geometry == null) {
             return;
         }
 
-        // two directions which are perpendicular to the arc and to each other
-        Vec3 direction = state.offset.scale(1 / length);
-        Vec3 reference = Math.abs(direction.y) > 0.99 ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
-        Vec3 sideA = direction.cross(reference).normalize();
-        Vec3 sideB = sideA.cross(direction);
-        Vec3[] points = LightningArcRenderer.points(state.offset, length, state.seed, sideA, sideB);
-
+        Vec3[] points = geometry.points();
         int color = state.color < 0 ? 0x73737F : state.color;
         float red = (color >> 16 & 255) / 255F;
         float green = (color >> 8 & 255) / 255F;
@@ -68,34 +61,15 @@ public class LightningArcRenderer extends EntityRenderer<LightningArcEntity, Lig
             Matrix4fc matrix = pose.pose();
             for (int layer = 0; layer < LAYERS; layer++) {
                 double width = 0.03 + layer * 0.05;
+                Vec3 halfA = geometry.sideA().scale(width);
+                Vec3 halfB = geometry.sideB().scale(width);
                 for (int i = 0; i < points.length - 1; i++) {
                     // two planes cross each other, so the arc has a body from every side
-                    LightningArcRenderer.ribbon(matrix, buffer, points[i], points[i + 1], sideA.scale(width), red, green, blue, alpha);
-                    LightningArcRenderer.ribbon(matrix, buffer, points[i], points[i + 1], sideB.scale(width), red, green, blue, alpha);
+                    LightningArcRenderer.ribbon(matrix, buffer, points[i], points[i + 1], halfA, red, green, blue, alpha);
+                    LightningArcRenderer.ribbon(matrix, buffer, points[i], points[i + 1], halfB, red, green, blue, alpha);
                 }
             }
         });
-    }
-
-    // the points of the arc relative to its start
-    // ends are fixed, in between it jitters sideways
-    private static Vec3[] points(Vec3 offset, double length, long seed, Vec3 sideA, Vec3 sideB) {
-        int segments = Mth.clamp((int) (length * 1.5), 6, 32);
-        double spread = Math.min(1.2, length * 0.12);
-        RandomSource random = RandomSource.createThreadLocalInstance(seed);
-        Vec3[] points = new Vec3[segments + 1];
-        for (int i = 0; i <= segments; i++) {
-            double progress = (double) i / segments;
-            Vec3 point = offset.scale(progress);
-            if (i > 0 && i < segments) {
-                double taper = Math.sin(Math.PI * progress) * spread;
-                point = point.add(sideA.scale((random.nextDouble() - 0.5) * 2 * taper)).add(sideB.scale((random.nextDouble() - 0.5) * 2 * taper));
-            }
-
-            points[i] = point;
-        }
-
-        return points;
     }
 
     // A flat strip from a to b, drawn from both sides so it does not matter which one faces the camera

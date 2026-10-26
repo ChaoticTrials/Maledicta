@@ -15,11 +15,8 @@ import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-/**
- * A short-lived lightning between two points, which a vanilla lightning bolt can't be since it always comes from above.
- * The entity sits at the start. Only visual, it does nothing to the world.
- */
 public class LightningArcEntity extends Entity {
 
     public static final int LIFETIME = 10;
@@ -27,6 +24,8 @@ public class LightningArcEntity extends Entity {
     private static final EntityDataAccessor<Vector3fc> OFFSET = SynchedEntityData.defineId(LightningArcEntity.class, EntityDataSerializers.VECTOR3);
     private static final EntityDataAccessor<Integer> COLOR = SynchedEntityData.defineId(LightningArcEntity.class, EntityDataSerializers.INT);
 
+    @Nullable
+    private LightningArcGeometry geometry;
     private final long seed;
 
     public LightningArcEntity(EntityType<? extends LightningArcEntity> type, Level level) {
@@ -65,10 +64,28 @@ public class LightningArcEntity extends Entity {
         return this.seed;
     }
 
+    public LightningArcGeometry getGeometry() {
+        if (this.geometry == null) {
+            this.geometry = LightningArcGeometry.create(this.getOffset(), this.seed);
+        }
+
+        return this.geometry;
+    }
+
+    @Override
+    public void onSyncedDataUpdated(@Nonnull EntityDataAccessor<?> accessor) {
+        super.onSyncedDataUpdated(accessor);
+
+        if (OFFSET.equals(accessor)) {
+            this.geometry = null;
+        }
+    }
+
     @Override
     public void tick() {
         super.tick();
-        if (!this.level().isClientSide() && this.tickCount > LIFETIME) {
+
+        if (this.tickCount > LIFETIME) {
             this.discard();
         }
     }

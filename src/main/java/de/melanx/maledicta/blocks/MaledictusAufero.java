@@ -63,11 +63,13 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable,
 
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@Nonnull Level level, @Nonnull BlockState state, @Nonnull BlockEntityType<T> type) {
-        if (level.isClientSide() || type != ModBlockEntities.maledictusAufero) {
+        if (type != ModBlockEntities.maledictusAufero) {
             return null;
         }
 
-        return (tickLevel, pos, tickState, blockEntity) -> ((MaledictusAuferoBlockEntity) blockEntity).serverTick((ServerLevel) tickLevel, pos);
+        return level.isClientSide()
+                ? (tickLevel, pos, tickState, blockEntity) -> ((MaledictusAuferoBlockEntity) blockEntity).clientTick(tickLevel, pos)
+                : (tickLevel, pos, tickState, blockEntity) -> ((MaledictusAuferoBlockEntity) blockEntity).serverTick((ServerLevel) tickLevel, pos);
     }
 
     @Override

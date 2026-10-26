@@ -37,7 +37,7 @@ public final class Maledicta extends ModXRegistration {
             system.addDataProvider(EnchantmentTagsProvider::new);
             system.addDataProvider(ItemModelProvider::new);
             system.addDataProvider(RecipeProvider::new);
-            system.addDataProvider(ItemTagsProvider::new);
+            system.addDataProvider(ModTagsProvider::new);
             system.addDataProvider(SoundsProvider::new);
         });
     }

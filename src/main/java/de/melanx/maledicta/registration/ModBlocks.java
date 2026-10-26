@@ -4,12 +4,19 @@ import de.melanx.maledicta.Maledicta;
 import de.melanx.maledicta.blocks.MaledictusAufero;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.MapColor;
 import org.moddingx.libx.annotation.registration.RegisterClass;
 
 @RegisterClass(registry = "BLOCK", priority = -1)
 public class ModBlocks {
 
-    public static final Block maledictusAufero = new MaledictusAufero(Maledicta.getInstance(), BlockBehaviour.Properties.ofLegacyCopy(Blocks.LIGHTNING_ROD), new Item.Properties());
+    public static final Block maledictusAufero = new MaledictusAufero(Maledicta.getInstance(), BlockBehaviour.Properties.of()
+            .mapColor(MapColor.NETHER)
+            .forceSolidOn()
+            .requiresCorrectToolForDrops()
+            .strength(3.0F, 6.0F)
+            .sound(SoundType.NETHERITE_BLOCK)
+            .noOcclusion(), new Item.Properties());
 }

@@ -21,13 +21,13 @@ public class EnchantmentProvider extends EnchantmentProviderBase {
     public static final ResourceKey<Enchantment> STRIFE = EnchantmentProvider.curseKey("strife");
 
     public final Holder<Enchantment> curseOfKarma = this.enchantment(Component.translatable("enchantment.maledicta.curse_of_karma"))
-            .supportedItems(ItemTagsProvider.ALL_WEAPONS)
+            .supportedItems(ModTagsProvider.ALL_WEAPONS)
             .slot(EquipmentSlotGroup.HAND)
             .minCost(25, 0)
             .maxCost(50, 0)
             .build();
     public final Holder<Enchantment> curseOfKindness = this.enchantment(Component.translatable("enchantment.maledicta.curse_of_kindness"))
-            .supportedItems(ItemTagsProvider.ALL_WEAPONS)
+            .supportedItems(ModTagsProvider.ALL_WEAPONS)
             .slot(EquipmentSlotGroup.HAND)
             .minCost(25, 0)
             .maxCost(50, 0)

@@ -1,5 +1,6 @@
 package de.melanx.maledicta.util;
 
+import com.google.common.collect.Lists;
 import de.melanx.maledicta.ModConfig;
 import de.melanx.maledicta.blocks.StoredCurse;
 import de.melanx.maledicta.data.DamageTypeProvider;
@@ -45,7 +46,10 @@ public class AuferoEffects {
     @Nullable
     public static ItemStack findTarget(ServerPlayer player, StoredCurse curse) {
         List<ItemStack> candidates = new ArrayList<>();
-        for (EquipmentSlot slot : Util.WORN_OR_HELD) {
+        List<EquipmentSlot> SLOTS = Lists.newArrayList(Util.WORN_OR_HELD);
+        Collections.shuffle(SLOTS);
+
+        for (EquipmentSlot slot : SLOTS) {
             ItemStack stack = player.getItemBySlot(slot);
             if (!stack.isEmpty() && stack.supportsEnchantment(curse.curse()) && stack.getEnchantmentLevel(curse.curse()) <= 0) {
                 candidates.add(stack);

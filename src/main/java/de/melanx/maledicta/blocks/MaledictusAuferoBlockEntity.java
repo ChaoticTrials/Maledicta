@@ -33,7 +33,7 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
     // the oldest curse comes first
     private final List<StoredCurse> curses = new ArrayList<>();
     private float decayProgress;
-    private boolean canDecay;
+    private boolean canDecay = true;
     private float jumpProgress;
 
     public MaledictusAuferoBlockEntity(BlockPos pos, BlockState state) {

@@ -1,6 +1,17 @@
 {
   "block.maledicta.maledictus_aufero": "Maledictus Aufero",
 
+  "command.maledicta.storm.start": "The Curse Storm strikes the rods in the nether for %s seconds",
+  "command.maledicta.storm.stop": "The Curse Storm is clearing up",
+  "command.maledicta.storm.status": "Curse Storm: %s, %s seconds left in this phase",
+  "command.maledicta.storm.not_running": "There is no Curse Storm right now",
+  "command.maledicta.storm.disabled": "Curse Storms are disabled in the config",
+  "command.maledicta.storm.no_nether": "There is no nether on this server",
+  "command.maledicta.storm.phase.calm": "calm",
+  "command.maledicta.storm.phase.brewing": "brewing",
+  "command.maledicta.storm.phase.active": "active",
+  "command.maledicta.storm.phase.clearing": "clearing",
+
   "death.attack.maledicta_karma.message": "%1$s experienced karma for harming others",
   "death.attack.maledicta_doomed.message": "%1$s was doomed",
   "death.attack.maledicta_aufero.message": "%1$s was torn apart by released curses",

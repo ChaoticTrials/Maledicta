@@ -1,5 +1,6 @@
 package de.melanx.maledicta.data;
 
+import de.melanx.maledicta.Maledicta;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.tags.TagAppender;
 import net.minecraft.resources.ResourceKey;
@@ -13,6 +14,8 @@ import org.moddingx.libx.datagen.provider.tags.TagProviderBase;
 import java.util.List;
 
 public class EnchantmentTagsProvider extends TagProviderBase<Enchantment> {
+
+    public static final TagKey<Enchantment> PREFILLED_ROD_ENCHANTMENTS = TagKey.create(Registries.ENCHANTMENT, Maledicta.getInstance().id("prefilled_rod_enchantments"));
 
     public EnchantmentTagsProvider(DatagenContext ctx) {
         super(ctx, Registries.ENCHANTMENT);
@@ -33,6 +36,8 @@ public class EnchantmentTagsProvider extends TagProviderBase<Enchantment> {
         this.keyTag(EnchantmentTags.CURSE).addAll(enchantmentKeys);
         this.keyTag(EnchantmentTags.ON_RANDOM_LOOT).addAll(enchantmentKeys);
         this.keyTag(EnchantmentTags.TRADEABLE).addAll(enchantmentKeys);
+
+        this.keyTag(PREFILLED_ROD_ENCHANTMENTS).addAll(enchantmentKeys);
     }
 
     private TagAppender<ResourceKey<Enchantment>, Enchantment> keyTag(TagKey<Enchantment> tag) {

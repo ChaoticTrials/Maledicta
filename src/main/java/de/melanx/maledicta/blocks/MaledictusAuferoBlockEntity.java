@@ -1,20 +1,26 @@
 package de.melanx.maledicta.blocks;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.melanx.maledicta.ModConfig;
 import de.melanx.maledicta.client.ClientArcs;
+import de.melanx.maledicta.lightning.ColoredLightningBoltEntity;
 import de.melanx.maledicta.registration.ModBlockEntities;
+import de.melanx.maledicta.registration.ModEntities;
+import de.melanx.maledicta.storm.CurseStorm;
 import de.melanx.maledicta.util.AuferoEffects;
 import de.melanx.maledicta.util.Util;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.*;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.ExtraCodecs;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
@@ -35,10 +41,11 @@ import java.util.List;
 
 public class MaledictusAuferoBlockEntity extends BlockEntity {
 
-    private static final Codec<List<StoredCurse>> CURSES_CODEC = StoredCurse.CODEC.listOf();
+    private static final Codec<List<LeveledEnchantment>> CURSES_CODEC = LeveledEnchantment.CODEC.listOf();
+    private static final int[] STORM_COLORS = {0xFF1A1A, 0xC80F0F, 0xFF4D4D, 0x8B0000, 0xE0301E};
 
-    // the oldest curse comes first
-    private final List<StoredCurse> curses = new ArrayList<>();
+    // the oldest enchantment comes first
+    private final List<LeveledEnchantment> curses = new ArrayList<>();
     private float decayProgress;
     private boolean canDecay = true;
     private float jumpProgress;
@@ -57,11 +64,29 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
             return false;
         }
 
-        this.curses.add(new StoredCurse(curse, curseLevel));
+        this.curses.add(new LeveledEnchantment(curse, curseLevel));
         this.setChanged();
         this.syncCursed();
 
         return true;
+    }
+
+    public void prefill(ServerLevel level, PrefillEnchantments prefill) {
+        if (level == null) {
+            return;
+        }
+
+        Registry<Enchantment> enchantments = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        HolderSet.Named<Enchantment> possibleEnchantments = enchantments.get(prefill.pool()).orElseThrow();
+
+        int amount = level.getRandom().nextIntBetweenInclusive(prefill.min(), prefill.max());
+        for (int i = 0; i < amount; i++) {
+            Holder<Enchantment> curse = possibleEnchantments.get(level.getRandom().nextInt(possibleEnchantments.size()));
+            this.curses.add(new LeveledEnchantment(curse, curse.value().getMaxLevel()));
+        }
+
+        this.cursed = !this.curses.isEmpty();
+        this.setChanged();
     }
 
     private boolean makeRoom(ServerLevel level) {
@@ -78,6 +103,10 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
     }
 
     public void serverTick(ServerLevel level, BlockPos pos) {
+        if (level.getRandom().nextInt(ModConfig.CurseStorm.strikeInterval) == 0 && CurseStorm.isActive(level)) {
+            this.stormStrike(level, pos);
+        }
+
         if (this.curses.isEmpty()) {
             this.decayProgress = 0;
             return;
@@ -106,6 +135,25 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
             this.setChanged();
             this.syncCursed();
         }
+    }
+
+    private void stormStrike(ServerLevel level, BlockPos pos) {
+        BlockState state = this.getBlockState();
+        if (!(state.getBlock() instanceof MaledictusAufero rod)) {
+            return;
+        }
+
+        int color = STORM_COLORS[level.getRandom().nextInt(STORM_COLORS.length)];
+        ColoredLightningBoltEntity lightning = ModEntities.lightningBolt.create(level, EntitySpawnReason.EVENT);
+        if (lightning != null) {
+            lightning.setVisualOnly(true);
+            lightning.setPowersRod(false);
+            lightning.snapTo(Vec3.upFromBottomCenterOf(pos, 1));
+            lightning.setColor(color);
+            level.addFreshEntity(lightning);
+        }
+
+        rod.strike(state, level, pos);
     }
 
     public void clientTick(Level level, BlockPos pos) {
@@ -158,10 +206,14 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
         }
     }
 
+    public void setCanDecay(boolean canDecay) {
+        this.canDecay = canDecay;
+    }
+
     // A random curse tries to jump to the players in range, one after another. If it does not jump, it loses a level.
     private void decayStep(ServerLevel level, BlockPos pos) {
         int index = level.getRandom().nextInt(this.curses.size());
-        StoredCurse curse = this.curses.get(index);
+        LeveledEnchantment curse = this.curses.get(index);
 
         List<ServerPlayer> players = AuferoEffects.playersNear(level, pos.getCenter(), ModConfig.MaledictusAufero.Jump.range);
         Collections.shuffle(players);
@@ -172,7 +224,7 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
             }
         }
 
-        StoredCurse lowered = curse.lowered();
+        LeveledEnchantment lowered = curse.lowered();
         if (lowered == null) {
             this.curses.remove(index);
         } else {
@@ -181,7 +233,7 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
     }
 
     // The closer the player, the likelier. Only counts if the player has an item which can take the curse
-    private boolean tryJump(ServerLevel level, BlockPos pos, ServerPlayer player, StoredCurse curse, double baseChance) {
+    private boolean tryJump(ServerLevel level, BlockPos pos, ServerPlayer player, LeveledEnchantment curse, double baseChance) {
         double distance = Math.sqrt(player.distanceToSqr(pos.getCenter()));
         double chance = baseChance * (1 - distance / ModConfig.MaledictusAufero.Jump.range);
 
@@ -210,6 +262,10 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
             bad += ModConfig.MaledictusAufero.BadEnergy.night;
         }
 
+        if (level instanceof ServerLevel serverLevel && CurseStorm.isActive(serverLevel)) {
+            bad += ModConfig.MaledictusAufero.BadEnergy.curseStorm;
+        }
+
         if (level.dimension() != Level.OVERWORLD) {
             bad += ModConfig.MaledictusAufero.BadEnergy.dimension;
         }
@@ -225,7 +281,7 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
 
         // only called when the block really goes away, not when its state changes
         if (this.level instanceof ServerLevel serverLevel && !this.curses.isEmpty()) {
-            List<StoredCurse> released = List.copyOf(this.curses);
+            List<LeveledEnchantment> released = List.copyOf(this.curses);
             this.curses.clear();
             AuferoEffects.breakRod(serverLevel, pos, released);
         }
@@ -265,5 +321,18 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
 
         // client only, not saved
         this.cursed = input.getBooleanOr("has_curses", !this.curses.isEmpty());
+    }
+
+    public record PrefillEnchantments(TagKey<Enchantment> pool, int min, int max) {
+
+        public static final Codec<PrefillEnchantments> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                TagKey.hashedCodec(Registries.ENCHANTMENT).fieldOf("pool").forGetter(PrefillEnchantments::pool),
+                ExtraCodecs.POSITIVE_INT.optionalFieldOf("min", 4).forGetter(PrefillEnchantments::min),
+                ExtraCodecs.POSITIVE_INT.optionalFieldOf("max", 8).forGetter(PrefillEnchantments::max)
+        ).apply(instance, PrefillEnchantments::new));
+
+        public PrefillEnchantments(TagKey<Enchantment> pool) {
+            this(pool, 4, 8);
+        }
     }
 }

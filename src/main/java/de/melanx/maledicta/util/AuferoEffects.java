@@ -2,7 +2,7 @@ package de.melanx.maledicta.util;
 
 import com.google.common.collect.Lists;
 import de.melanx.maledicta.ModConfig;
-import de.melanx.maledicta.blocks.StoredCurse;
+import de.melanx.maledicta.blocks.LeveledEnchantment;
 import de.melanx.maledicta.data.DamageTypeProvider;
 import de.melanx.maledicta.lightning.ColoredLightningBoltEntity;
 import de.melanx.maledicta.lightning.LightningArcEntity;
@@ -44,14 +44,14 @@ public class AuferoEffects {
     }
 
     @Nullable
-    public static ItemStack findTarget(ServerPlayer player, StoredCurse curse) {
+    public static ItemStack findTarget(ServerPlayer player, LeveledEnchantment curse) {
         List<ItemStack> candidates = new ArrayList<>();
         List<EquipmentSlot> SLOTS = Lists.newArrayList(Util.WORN_OR_HELD);
         Collections.shuffle(SLOTS);
 
         for (EquipmentSlot slot : SLOTS) {
             ItemStack stack = player.getItemBySlot(slot);
-            if (!stack.isEmpty() && stack.supportsEnchantment(curse.curse()) && stack.getEnchantmentLevel(curse.curse()) <= 0) {
+            if (!stack.isEmpty() && stack.supportsEnchantment(curse.enchantment()) && stack.getEnchantmentLevel(curse.enchantment()) <= 0) {
                 candidates.add(stack);
             }
         }
@@ -59,18 +59,18 @@ public class AuferoEffects {
         return candidates.isEmpty() ? null : candidates.get(player.getRandom().nextInt(candidates.size()));
     }
 
-    public static boolean jump(ServerLevel level, BlockPos rodPos, ServerPlayer player, StoredCurse curse, int color) {
+    public static boolean jump(ServerLevel level, BlockPos rodPos, ServerPlayer player, LeveledEnchantment curse, int color) {
         ItemStack target = AuferoEffects.findTarget(player, curse);
         if (target == null) {
             return false;
         }
 
-        target.enchant(curse.curse(), curse.appliedLevel());
+        target.enchant(curse.enchantment(), curse.appliedLevel());
         AuferoEffects.arc(level, rodPos.getCenter(), player.position().add(0, player.getBbHeight() / 2, 0), color, true);
         return true;
     }
 
-    public static boolean jumpToNearest(ServerLevel level, BlockPos rodPos, StoredCurse curse, int color) {
+    public static boolean jumpToNearest(ServerLevel level, BlockPos rodPos, LeveledEnchantment curse, int color) {
         for (ServerPlayer player : AuferoEffects.playersNear(level, rodPos.getCenter(), ModConfig.MaledictusAufero.Jump.range)) {
             if (AuferoEffects.jump(level, rodPos, player, curse, color)) {
                 return true;
@@ -106,7 +106,7 @@ public class AuferoEffects {
         }
     }
 
-    public static void breakRod(ServerLevel level, BlockPos pos, List<StoredCurse> curses) {
+    public static void breakRod(ServerLevel level, BlockPos pos, List<LeveledEnchantment> curses) {
         int count = curses.size();
         Vec3 center = pos.getCenter();
         double radius = ModConfig.MaledictusAufero.Break.radius;
@@ -120,7 +120,7 @@ public class AuferoEffects {
         }
 
         // the curses jump to the players, the closer the more, but never more than the maximum
-        List<StoredCurse> remaining = new ArrayList<>(curses);
+        List<LeveledEnchantment> remaining = new ArrayList<>(curses);
         Collections.shuffle(remaining, new Random(level.getRandom().nextLong()));
         Map<ServerPlayer, Integer> received = new HashMap<>();
         boolean progress = true;
@@ -134,7 +134,7 @@ public class AuferoEffects {
                     continue;
                 }
 
-                Iterator<StoredCurse> iterator = remaining.iterator();
+                Iterator<LeveledEnchantment> iterator = remaining.iterator();
                 while (iterator.hasNext()) {
                     if (AuferoEffects.jump(level, pos, player, iterator.next(), AuferoEffects.breakColor(level))) {
                         iterator.remove();
@@ -160,9 +160,9 @@ public class AuferoEffects {
 
         // what nobody could take falls from the sky as enchanted books
         double y = Math.min(pos.getY() + 64, level.getMaxY() - 1);
-        for (StoredCurse curse : remaining) {
+        for (LeveledEnchantment curse : remaining) {
             ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
-            book.enchant(curse.curse(), curse.appliedLevel());
+            book.enchant(curse.enchantment(), curse.appliedLevel());
 
             double x = center.x + (level.getRandom().nextDouble() - 0.5) * 2;
             double z = center.z + (level.getRandom().nextDouble() - 0.5) * 2;

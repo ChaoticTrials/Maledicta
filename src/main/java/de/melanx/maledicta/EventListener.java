@@ -11,7 +11,9 @@ import de.melanx.maledicta.registration.ModBlocks;
 import de.melanx.maledicta.registration.ModDataComponentTypes;
 import de.melanx.maledicta.registration.ModEntities;
 import de.melanx.maledicta.registration.ModSoundEvents;
+import de.melanx.maledicta.storm.CurseStormCommand;
 import de.melanx.maledicta.util.Util;
+import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -36,6 +38,7 @@ import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
@@ -55,6 +58,12 @@ public class EventListener {
 
     private static long nextTime = 0L;
     public static final Map<UUID, Long> DOOMED_PLAYERS = new HashMap<>();
+
+    @SubscribeEvent
+    public static void registerCommands(RegisterCommandsEvent event) {
+        event.getDispatcher().register(Commands.literal("maledicta")
+                .then(CurseStormCommand.register()));
+    }
 
     @SubscribeEvent
     public static void registerEntityRenderer(EntityRenderersEvent.RegisterRenderers event) {

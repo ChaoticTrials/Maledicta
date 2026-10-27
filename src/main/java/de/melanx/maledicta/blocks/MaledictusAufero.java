@@ -74,6 +74,10 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable,
 
     @Override
     public void onLightningStrike(@Nonnull BlockState state, @Nonnull Level level, @Nonnull BlockPos pos) {
+        this.strike(state, level, pos);
+    }
+
+    public void strike(BlockState state, Level level, BlockPos pos) {
         level.setBlock(pos, state.setValue(POWERED, true), Block.UPDATE_ALL);
         level.updateNeighborsAt(pos.relative(state.getValue(FACING).getOpposite()), this);
         level.scheduleTick(pos, this, 5);
@@ -133,22 +137,22 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable,
                 boolean enchantFirst = false;
                 boolean enchantSecond = false;
                 if (secondCurse != null) {
-                    enchantFirst = first.getItem().getEnchantmentLevel(secondCurse.enchantment) == 0 && first.getItem().supportsEnchantment(secondCurse.enchantment);
+                    enchantFirst = first.getItem().getEnchantmentLevel(secondCurse.enchantment()) == 0 && first.getItem().supportsEnchantment(secondCurse.enchantment());
                 }
 
                 if (firstCurse != null) {
-                    enchantSecond = second.getItem().getEnchantmentLevel(firstCurse.enchantment) == 0 && second.getItem().supportsEnchantment(firstCurse.enchantment);
+                    enchantSecond = second.getItem().getEnchantmentLevel(firstCurse.enchantment()) == 0 && second.getItem().supportsEnchantment(firstCurse.enchantment());
                 }
 
                 if (enchantFirst || enchantSecond) {
                     if (enchantFirst) {
-                        Util.unenchant(second.getItem(), secondCurse.enchantment);
-                        first.getItem().enchant(secondCurse.enchantment, secondCurse.level);
+                        Util.unenchant(second.getItem(), secondCurse.enchantment());
+                        first.getItem().enchant(secondCurse.enchantment(), secondCurse.level());
                     }
 
                     if (enchantSecond) {
-                        Util.unenchant(first.getItem(), firstCurse.enchantment);
-                        second.getItem().enchant(firstCurse.enchantment, firstCurse.level);
+                        Util.unenchant(first.getItem(), firstCurse.enchantment());
+                        second.getItem().enchant(firstCurse.enchantment(), firstCurse.level());
                     }
 
                     this.summonLightning(level, first.position());
@@ -167,11 +171,11 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable,
         Set<UUID> hasLightning = new HashSet<>();
         for (ItemEntity item : cursedItems) {
             LeveledEnchantment randomCurse = this.getRandomCurse(item.getItem(), level.getRandom(), enchantmentRegistryLookup);
-            if (randomCurse == null || rod == null || !rod.store((ServerLevel) level, randomCurse.enchantment, randomCurse.level)) {
+            if (randomCurse == null || rod == null || !rod.store((ServerLevel) level, randomCurse.enchantment(), randomCurse.level())) {
                 continue;
             }
 
-            Util.unenchant(item.getItem(), randomCurse.enchantment);
+            Util.unenchant(item.getItem(), randomCurse.enchantment());
             ModNetwork.updateItemEnchantments(item);
 
             hasLightning.add(item.getUUID());
@@ -238,6 +242,4 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable,
     public void registerAdditional(RegistrationContext ctx, EntryCollector builder) {
         builder.register(Registries.ITEM, this.item);
     }
-
-    record LeveledEnchantment(Holder<Enchantment> enchantment, int level) {}
 }

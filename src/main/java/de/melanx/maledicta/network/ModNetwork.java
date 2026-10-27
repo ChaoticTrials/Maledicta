@@ -1,5 +1,6 @@
 package de.melanx.maledicta.network;
 
+import de.melanx.maledicta.storm.StormPhase;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -14,11 +15,12 @@ public class ModNetwork extends NetworkX {
         this.register(new UpdateItemEnchantments());
         this.register(new HeartbeatEffect());
         this.register(new DarkSkyEffect());
+        this.register(new CurseStormSync());
     }
 
     @Override
     protected String getVersion() {
-        return "4";
+        return "5";
     }
 
     public static void updateItemEnchantments(ItemEntity item) {
@@ -31,5 +33,9 @@ public class ModNetwork extends NetworkX {
 
     public static void darkSky(ServerPlayer player, int ticks) {
         PacketDistributor.sendToPlayer(player, new DarkSkyEffect.Message(ticks));
+    }
+
+    public static void curseStorm(ServerPlayer player, boolean tracked, StormPhase phase, int ticksLeft, int phaseLength) {
+        PacketDistributor.sendToPlayer(player, new CurseStormSync.Message(tracked, phase, ticksLeft, phaseLength));
     }
 }

@@ -30,6 +30,7 @@ public final class Maledicta extends ModXRegistration {
 
         DatagenSystem.create(this, system -> {
             system.addRegistryProvider(BlockLootProvider::new);
+            system.addRegistryProvider(ChestLootProvider::new);
             system.addRegistryProvider(DamageTypeProvider::new);
             system.addRegistryProvider(EnchantmentProvider::new);
 

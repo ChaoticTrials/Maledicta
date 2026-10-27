@@ -1,6 +1,17 @@
 {
   "block.maledicta.maledictus_aufero": "Maledictus Aufero",
 
+  "command.maledicta.storm.start": "Der Fluchsturm schlägt %s Sekunden lang in die Ableiter im Nether ein",
+  "command.maledicta.storm.stop": "Der Fluchsturm klart auf",
+  "command.maledicta.storm.status": "Fluchsturm: %s, noch %s Sekunden in dieser Phase",
+  "command.maledicta.storm.not_running": "Gerade tobt kein Fluchsturm",
+  "command.maledicta.storm.disabled": "Fluchstürme sind in der Konfiguration deaktiviert",
+  "command.maledicta.storm.no_nether": "Dieser Server hat keinen Nether",
+  "command.maledicta.storm.phase.calm": "ruhig",
+  "command.maledicta.storm.phase.brewing": "zieht auf",
+  "command.maledicta.storm.phase.active": "tobt",
+  "command.maledicta.storm.phase.clearing": "klart auf",
+
   "death.attack.maledicta_karma.message": "%1$s spürte Karma für das Verletzen anderer",
   "death.attack.maledicta_doomed.message": "%1$s ist untergegangen",
   "death.attack.maledicta_aufero.message": "%1$s wurde von entfesselten Flüchen zerrissen",

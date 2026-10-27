@@ -16,6 +16,8 @@ public class ColoredLightningBoltEntity extends LightningBolt {
 
     public static final EntityDataAccessor<Integer> COLOR_ACCESSOR = SynchedEntityData.defineId(ColoredLightningBoltEntity.class, EntityDataSerializers.INT);
 
+    private boolean powersRod = true;
+
     public ColoredLightningBoltEntity(EntityType<? extends LightningBolt> entityType, Level level) {
         super(entityType, level);
     }
@@ -28,6 +30,10 @@ public class ColoredLightningBoltEntity extends LightningBolt {
         return this.entityData.get(COLOR_ACCESSOR);
     }
 
+    public void setPowersRod(boolean powersRod) {
+        this.powersRod = powersRod;
+    }
+
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(ColoredLightningBoltEntity.COLOR_ACCESSOR, -1);
@@ -35,6 +41,10 @@ public class ColoredLightningBoltEntity extends LightningBolt {
 
     @Override
     protected void powerLightningRod() {
+        if (!this.powersRod) {
+            return;
+        }
+
         BlockPos strikePosition = this.getStrikePosition();
         BlockState blockState = this.level().getBlockState(strikePosition);
 

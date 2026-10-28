@@ -4,7 +4,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import de.melanx.maledicta.util.Chance;
 import net.minecraft.util.Mth;
+import org.moddingx.libx.annotation.meta.RemoveIn;
 
+@Deprecated(forRemoval = true)
+@RemoveIn(minecraft = "27.1")
 public class EnergyCollector {
 
     public static final Codec<EnergyCollector> CODEC = RecordCodecBuilder.create(instance -> instance.group(

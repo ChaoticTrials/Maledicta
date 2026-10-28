@@ -223,11 +223,11 @@ public class ModConfig {
         public static int maxCurses = 8;
     }
 
-    @Group
+    @Group("Will be removed in 27.1")
     public static class NegativeEnergy {
 
         @Config("Should negative energy even be enabled")
-        public static boolean enabled = true;
+        public static boolean enabled = false;
 
         @Config("The negative energy each item in hand will receive each second while in nether - 0.01 = 1%")
         @DoubleRange(min = 0, max = 1)

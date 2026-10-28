@@ -36,6 +36,18 @@ public class ChestLootProvider extends ChestLootProviderBase {
                         .add(this.filler(Items.CRYING_OBSIDIAN, 2, 1, 3))
                         .add(this.filler(Items.EXPERIENCE_BOTTLE, 1, 1, 3))
                         .add(this.filler(Items.NETHERITE_SCRAP, 1, 1, 1))));
+
+        this.customLootTable("cursed_cairn", LootTable.lootTable()
+                .withPool(LootPool.lootPool()
+                        .setRolls(UniformGenerator.between(1, 2))
+                        .add(LootItem.lootTableItem(Items.BOOK)
+                                .apply(new EnchantWithLevelsFunction.Builder(UniformGenerator.between(30, 45)))))
+                .withPool(LootPool.lootPool()
+                        .setRolls(UniformGenerator.between(2, 4))
+                        .add(this.filler(Items.GOLD_INGOT, 3, 2, 5))
+                        .add(this.filler(Items.CRYING_OBSIDIAN, 2, 1, 3))
+                        .add(this.filler(Items.AMETHYST_SHARD, 2, 3, 6))
+                        .add(this.filler(Items.EXPERIENCE_BOTTLE, 1, 2, 4))));
     }
 
     private LootPoolSingletonContainer.Builder<?> filler(ItemLike item, int weight, int min, int max) {

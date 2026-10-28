@@ -33,7 +33,11 @@ public final class Maledicta extends ModXRegistration {
             system.addRegistryProvider(ChestLootProvider::new);
             system.addRegistryProvider(DamageTypeProvider::new);
             system.addRegistryProvider(EnchantmentProvider::new);
+            system.addRegistryProvider(TemplatePoolProvider::new);
+            system.addRegistryProvider(StructureProvider::new);
+            system.addRegistryProvider(StructureSetProvider::new);
 
+            system.addDataProvider(BiomeTagsProvider::new);
             system.addDataProvider(BlockStateProvider::new);
             system.addDataProvider(EnchantmentTagsProvider::new);
             system.addDataProvider(ItemModelProvider::new);

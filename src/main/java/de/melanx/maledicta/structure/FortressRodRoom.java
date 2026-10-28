@@ -120,7 +120,7 @@ public class FortressRodRoom extends NetherFortressPieces.NetherBridgePiece {
 
         this.placeBlock(level, ModBlocks.maledictusAufero.defaultBlockState(), x, y, z, chunkBB);
         if (level.getBlockEntity(pos) instanceof MaledictusAuferoBlockEntity rod) {
-            rod.prefill(level.getLevel(), new MaledictusAuferoBlockEntity.PrefillEnchantments(EnchantmentTagsProvider.PREFILLED_ROD_ENCHANTMENTS, ModConfig.FortressRoom.minCurses, ModConfig.FortressRoom.maxCurses));
+            rod.setPrefillEnchantments(new MaledictusAuferoBlockEntity.PrefillEnchantments(EnchantmentTagsProvider.PREFILLED_ROD_ENCHANTMENTS, ModConfig.FortressRoom.minCurses, ModConfig.FortressRoom.maxCurses));
             rod.setCanDecay(false);
         }
     }

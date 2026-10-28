@@ -46,6 +46,8 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
 
     // the oldest enchantment comes first
     private final List<LeveledEnchantment> curses = new ArrayList<>();
+    // set by structure templates, filled on the first tick
+    private PrefillEnchantments prefillEnchantments;
     private float decayProgress;
     private boolean canDecay = true;
     private float jumpProgress;
@@ -66,12 +68,15 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
 
         this.curses.add(new LeveledEnchantment(curse, curseLevel));
         this.setChanged();
-        this.syncCursed();
 
         return true;
     }
 
-    public void prefill(ServerLevel level, PrefillEnchantments prefill) {
+    public void setPrefillEnchantments(PrefillEnchantments prefill) {
+        this.prefillEnchantments = prefill;
+    }
+
+    private void prefill(ServerLevel level, PrefillEnchantments prefill) {
         if (level == null) {
             return;
         }
@@ -85,7 +90,6 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
             this.curses.add(new LeveledEnchantment(curse, curse.value().getMaxLevel()));
         }
 
-        this.cursed = !this.curses.isEmpty();
         this.setChanged();
     }
 
@@ -103,6 +107,11 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
     }
 
     public void serverTick(ServerLevel level, BlockPos pos) {
+        if (this.prefillEnchantments != null) {
+            this.prefill(level, this.prefillEnchantments);
+            this.prefillEnchantments = null;
+        }
+
         if (level.getRandom().nextInt(ModConfig.CurseStorm.strikeInterval) == 0 && CurseStorm.isActive(level)) {
             this.stormStrike(level, pos);
         }
@@ -133,7 +142,6 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
             this.decayProgress = 0;
             this.decayStep(level, pos);
             this.setChanged();
-            this.syncCursed();
         }
     }
 
@@ -202,7 +210,6 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
         if (this.tryJump(level, pos, player, this.curses.get(index), ModConfig.MaledictusAufero.Jump.chance)) {
             this.curses.remove(index);
             this.setChanged();
-            this.syncCursed();
         }
     }
 
@@ -238,16 +245,6 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
         double chance = baseChance * (1 - distance / ModConfig.MaledictusAufero.Jump.range);
 
         return level.getRandom().nextDouble() < chance && AuferoEffects.jump(level, pos, player, curse, Util.LIGHTNING_COLOR);
-    }
-
-    private void syncCursed() {
-        boolean hasCurses = !this.curses.isEmpty();
-        if (this.cursed != hasCurses) {
-            this.cursed = hasCurses;
-            if (this.level != null) {
-                this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Block.UPDATE_CLIENTS);
-            }
-        }
     }
 
     private double badEnergy(Level level) {
@@ -308,6 +305,10 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
         output.store("curses", CURSES_CODEC, List.copyOf(this.curses));
         output.putFloat("decay_progress", this.decayProgress);
         output.putBoolean("can_decay", this.canDecay);
+
+        if (this.prefillEnchantments != null) {
+            output.store("prefill_with", PrefillEnchantments.CODEC, this.prefillEnchantments);
+        }
     }
 
     @Override
@@ -318,6 +319,7 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
         input.read("curses", CURSES_CODEC).ifPresent(this.curses::addAll);
         this.decayProgress = input.getFloatOr("decay_progress", 0F);
         this.canDecay = input.getBooleanOr("can_decay", true);
+        this.prefillEnchantments = input.read("prefill_with", PrefillEnchantments.CODEC).orElse(null);
 
         // client only, not saved
         this.cursed = input.getBooleanOr("has_curses", !this.curses.isEmpty());
@@ -333,6 +335,19 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
 
         public PrefillEnchantments(TagKey<Enchantment> pool) {
             this(pool, 4, 8);
+        }
+    }
+
+    @Override
+    public void setChanged() {
+        super.setChanged();
+
+        boolean hasCurses = !this.curses.isEmpty();
+        if (this.cursed != hasCurses) {
+            this.cursed = hasCurses;
+            if (this.level != null) {
+                this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Block.UPDATE_CLIENTS);
+            }
         }
     }
 }

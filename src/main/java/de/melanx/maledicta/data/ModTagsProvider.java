@@ -22,6 +22,8 @@ public class ModTagsProvider extends CommonTagsProviderBase {
     public void setup() {
         this.block(BlockTags.MINEABLE_WITH_PICKAXE)
                 .add(ModBlocks.maledictusAufero);
+        this.block(BlockTags.NEEDS_DIAMOND_TOOL)
+                .add(ModBlocks.maledictusAufero);
         this.block(BlockTags.LIGHTNING_RODS)
                 .add(ModBlocks.maledictusAufero);
         this.item(ALL_WEAPONS)

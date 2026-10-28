@@ -147,7 +147,7 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
 
     private void stormStrike(ServerLevel level, BlockPos pos) {
         BlockState state = this.getBlockState();
-        if (!(state.getBlock() instanceof MaledictusAufero rod)) {
+        if (!(state.getBlock() instanceof MaledictusAufero)) {
             return;
         }
 
@@ -155,13 +155,10 @@ public class MaledictusAuferoBlockEntity extends BlockEntity {
         ColoredLightningBoltEntity lightning = ModEntities.lightningBolt.create(level, EntitySpawnReason.EVENT);
         if (lightning != null) {
             lightning.setVisualOnly(true);
-            lightning.setPowersRod(false);
             lightning.snapTo(Vec3.upFromBottomCenterOf(pos, 1));
             lightning.setColor(color);
             level.addFreshEntity(lightning);
         }
-
-        rod.strike(state, level, pos);
     }
 
     public void clientTick(Level level, BlockPos pos) {

@@ -74,10 +74,6 @@ public class MaledictusAufero extends LightningRodBlock implements Registerable,
 
     @Override
     public void onLightningStrike(@Nonnull BlockState state, @Nonnull Level level, @Nonnull BlockPos pos) {
-        this.strike(state, level, pos);
-    }
-
-    public void strike(BlockState state, Level level, BlockPos pos) {
         level.setBlock(pos, state.setValue(POWERED, true), Block.UPDATE_ALL);
         level.updateNeighborsAt(pos.relative(state.getValue(FACING).getOpposite()), this);
         level.scheduleTick(pos, this, 5);

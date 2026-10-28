@@ -35,6 +35,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
@@ -284,9 +285,15 @@ public class EventListener {
         }
 
         LightningBolt lightning = (LightningBolt) event.getEntity();
-        BlockPos strikePosition = lightning.getStrikePosition();
-        if (!lightning.level().getBlockState(strikePosition).is(ModBlocks.maledictusAufero)) {
-            return;
+        Vec3 strikeVec = lightning.position();
+        if (!lightning.level().getBlockState(lightning.getStrikePosition()).is(ModBlocks.maledictusAufero)) {
+            // channeling spawns the bolt at the bottom of the hit block and moves it to the hit position afterward, so it is still inside the rod when it joins
+            BlockPos blockPos = lightning.blockPosition();
+            if (!lightning.level().getBlockState(blockPos).is(ModBlocks.maledictusAufero)) {
+                return;
+            }
+
+            strikeVec = Vec3.upFromBottomCenterOf(blockPos, 1);
         }
 
         event.setCanceled(true);
@@ -294,7 +301,7 @@ public class EventListener {
 
         Objects.requireNonNull(coloredLightning).setDamage(0);
         coloredLightning.setVisualOnly(ModConfig.safeLightnings);
-        coloredLightning.snapTo(lightning.position());
+        coloredLightning.snapTo(strikeVec);
         coloredLightning.setColor(Util.LIGHTNING_COLOR);
 
         event.getLevel().addFreshEntity(coloredLightning);
